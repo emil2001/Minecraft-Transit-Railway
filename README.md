@@ -4,6 +4,8 @@ The `gtnh-1.7.10` branch ports Minecraft Transit Railway 4.0.5 to Minecraft 1.7.
 
 This fork builds on [Minecraft Transit Railway](https://github.com/Minecraft-Transit-Railway/Minecraft-Transit-Railway), created by Jonathan Ho and its contributors. The [original README](README.upstream.md) retains the upstream project guide. The companion compatibility code is in [Minecraft-Mappings](https://github.com/emil2001/Minecraft-Mappings/tree/gtnh-1.7.10).
 
+The port includes arrival, motor and door sounds for lifts. [LIFT_SOUNDS.md](LIFT_SOUNDS.md) explains the floor bell setting, resource-pack replacements and recording credits.
+
 ## Building
 
 The port uses Java 21 and Gradle 8.14. Follow [BUILDING.md](BUILDING.md) to check out both repositories and supply the pinned external inputs. Retrieval of every dependency in a fresh environment remains untested.

@@ -21,3 +21,5 @@ The port review recorded eight unresolved attribution issues:
 8. The copied Minecraft textures and recovered published creator frontend have recorded provenance. A complete separate third-party license inventory for those materials has not been established.
 
 This publication provides the port source branches without a new port binary release. It retains these gaps for review and makes no claim that every redistribution obligation has been fulfilled. [BUILDING.md](BUILDING.md) identifies the external inputs and their pinned manifests.
+
+The GTNH lift sound recordings are CC0-1.0. Their authors, source pages and processing are listed in [LIFT_SOUNDS.md](LIFT_SOUNDS.md). The mod includes their file hashes and provenance in `META-INF/mtr/lift-sounds.json`.

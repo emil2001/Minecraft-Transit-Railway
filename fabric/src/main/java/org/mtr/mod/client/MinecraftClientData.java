@@ -15,9 +15,11 @@ import org.mtr.mod.block.BlockNode;
 import org.mtr.mod.data.PersistentVehicleData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.screen.DashboardListItem;
+import org.mtr.mod.sound.LiftSound;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,9 +54,9 @@ public final class MinecraftClientData extends ClientData {
 	@Override
 	public void sync() {
 		super.sync();
-		checkAndRemoveFromMap(vehicleIdToPersistentVehicleData, vehicles, NameColorDataBase::getId);
+		checkAndRemoveFromMap(vehicleIdToPersistentVehicleData, vehicles, NameColorDataBase::getId, value -> {});
 
-		checkAndRemoveFromMap(liftWrapperList, lifts, Lift::getId);
+		checkAndRemoveFromMap(liftWrapperList, lifts, Lift::getId, wrapper -> wrapper.sound.dispose());
 		lifts.forEach(lift -> {
 			final LiftWrapper liftWrapper = liftWrapperList.get(lift.getId());
 			if (liftWrapper == null) {
@@ -64,7 +66,7 @@ public final class MinecraftClientData extends ClientData {
 			}
 		});
 
-		checkAndRemoveFromMap(railWrapperList, rails, Rail::getHexId);
+		checkAndRemoveFromMap(railWrapperList, rails, Rail::getHexId, value -> {});
 		positionsToRail.forEach((startPosition, railMap) -> railMap.forEach((endPosition, rail) -> {
 			final String hexId = rail.getHexId();
 			final RailWrapper railWrapper = railWrapperList.get(hexId);
@@ -142,6 +144,7 @@ public final class MinecraftClientData extends ClientData {
 	}
 
 	public static void reset() {
+		instance.liftWrapperList.values().forEach(wrapper -> wrapper.sound.dispose());
 		MinecraftClientData.instance = new MinecraftClientData();
 		MinecraftClientData.dashboardInstance = new MinecraftClientData();
 	}
@@ -202,7 +205,7 @@ public final class MinecraftClientData extends ClientData {
 		return map;
 	}
 
-	private static <T, U, V> void checkAndRemoveFromMap(Map<T, U> map, ObjectSet<V> dataSet, Function<V, T> getId) {
+	private static <T, U, V> void checkAndRemoveFromMap(Map<T, U> map, ObjectSet<V> dataSet, Function<V, T> getId, Consumer<U> onRemove) {
 		final ObjectAVLTreeSet<T> idSet = dataSet.stream().map(getId).collect(Collectors.toCollection(ObjectAVLTreeSet::new));
 		final ObjectArrayList<T> idsToRemove = new ObjectArrayList<>();
 		map.keySet().forEach(id -> {
@@ -210,12 +213,13 @@ public final class MinecraftClientData extends ClientData {
 				idsToRemove.add(id);
 			}
 		});
-		idsToRemove.forEach(map::remove);
+		idsToRemove.forEach(id -> onRemove.accept(map.remove(id)));
 	}
 
 	public static class LiftWrapper {
 
 		public boolean shouldRender;
+		public final LiftSound sound = new LiftSound();
 		private Lift lift;
 
 		private LiftWrapper(Lift lift) {

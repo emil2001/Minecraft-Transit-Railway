@@ -175,6 +175,8 @@ public final class LiftProbe {
     private final JsonArray placements = new JsonArray(), interactions = new JsonArray();
     private final JsonArray pauseOptionCorrections = new JsonArray();
     private final JsonArray cabinRenderWitnesses = new JsonArray();
+    private final JsonArray liftAudioSources = new JsonArray();
+    private final java.util.Set<String> seenLiftAudioSources = new java.util.HashSet<>();
     private int stationaryRidingWitnesses, droppedRenderWitnesses;
     private int lastScriptedControlTick = -1000;
     private static final double CABIN_JITTER_MAX_RANGE = .001;
@@ -270,7 +272,7 @@ public final class LiftProbe {
             Lift lift = liftId == 0 ? findOnlyClientLift() : MinecraftClientData.getLift(liftId);
             if (current == Stage.LABELS && clientAcknowledged != current && clientStandReady(client)) {
                 for (int floor = 0; floor < 3; floor++) InitClient.REGISTRY_CLIENT.sendPacketToServer(
-                    new PacketUpdateLiftTrackFloorConfig(floorPos(floor), Integer.toString(floor + 1), DESCRIPTIONS[floor], false));
+                    new PacketUpdateLiftTrackFloorConfig(floorPos(floor), Integer.toString(floor + 1), DESCRIPTIONS[floor], Boolean.getBoolean("mtr.probeLiftAudio")));
                 clientAcknowledged = current;
             } else if (current == Stage.CONFIGURE && clientAcknowledged != current && lift != null) {
                 require(lift.getId() == liftId, "Configuration would target a different original Lift");
@@ -533,6 +535,7 @@ public final class LiftProbe {
                 () -> new ClientSample(client, lift, tick, renderSampleGate.frame, mtrRenderedMillis));
             if (event.phase == TickEvent.Phase.START && eligible && lift != null) scheduleCabinRenderWitness(client, lift, event.renderTickTime);
             if (event.phase != TickEvent.Phase.END) return;
+            if (owned && Boolean.getBoolean("mtr.probeLiftAudio")) observeLiftAudio(client);
             JsonObject diagnostic = new JsonObject(); diagnostic.addProperty("sampling_boundary", "RenderTick.END after original MTR world render");
             diagnostic.addProperty("frame", renderSampleGate.frame); diagnostic.addProperty("native_client_tick", tick);
             diagnostic.addProperty("eligible", eligible); diagnostic.addProperty("owned_world_player", owned); diagnostic.addProperty("lift_visible", visible);
@@ -555,6 +558,22 @@ public final class LiftProbe {
         } catch (Throwable problem) { fail(problem); }
     }
 
+    @SuppressWarnings("unchecked")
+    private void observeLiftAudio(Minecraft client) {
+        net.minecraft.client.audio.SoundHandler handler = client.getSoundHandler();
+        net.minecraft.client.audio.SoundManager manager = cpw.mods.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class, handler, "sndManager", "field_147694_f");
+        java.util.Map<String, net.minecraft.client.audio.ISound> playing = cpw.mods.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundManager.class, manager, "playingSounds", "field_148629_h");
+        playing.forEach((channel, sound) -> {
+            String id = sound.getPositionedSoundLocation().toString();
+            if (!id.startsWith("mtr_compat:blocks/mtr/lift_") || !seenLiftAudioSources.add(channel)) return;
+            JsonObject row = new JsonObject(); row.addProperty("event", id); row.addProperty("channel", channel);
+            row.addProperty("phase", stage.name()); row.addProperty("frame", renderSampleGate.frame);
+            row.addProperty("repeat", sound.canRepeat()); row.addProperty("gain", sound.getVolume()); row.addProperty("pitch", sound.getPitch());
+            row.addProperty("x", sound.getXPosF()); row.addProperty("y", sound.getYPosF()); row.addProperty("z", sound.getZPosF());
+            liftAudioSources.add(row);
+        });
+    }
+
     private void scheduleCabinRenderWitness(Minecraft client, Lift lift, float partial) throws Exception {
         org.mtr.mapping.holder.Identifier id = new org.mtr.mapping.holder.Identifier("mtr", "lift_probe_witness_" + runId);
         MainRenderer.cancelRender(id);
@@ -562,6 +581,9 @@ public final class LiftProbe {
         net.minecraft.client.entity.EntityClientPlayerMP player = client.thePlayer;
         JsonObject value = new JsonObject(); value.addProperty("frame", renderSampleGate.frame); value.addProperty("phase", stage.name());
         value.addProperty("partial_tick", partial); value.addProperty("frame_started_nanos", System.nanoTime());
+        value.addProperty("start_lift_object_identity", System.identityHashCode(lift));
+        value.add("start_original_client_lift", Utilities.getJsonObjectFromData(lift));
+        value.addProperty("start_mtr_render_millis", ((Number) diagnosticField(MainRenderer.class, "lastRenderedMillis")).longValue());
         value.addProperty("first_person", client.gameSettings.thirdPersonView == 0); value.addProperty("riding_at_frame_start", VehicleRidingMovement.isRiding(lift.getId()));
         double originY = player.lastTickPosY + (player.posY - player.lastTickPosY) * partial;
         value.addProperty("start_feet_y", player.boundingBox.minY); value.addProperty("start_pos_y", player.posY);
@@ -579,6 +601,15 @@ public final class LiftProbe {
 
     @SuppressWarnings("unchecked")
     private void captureCabinRenderWitness(Minecraft client, Lift lift, GraphicsHolder graphics, org.mtr.mapping.holder.Vector3d offset, JsonObject value) throws Exception {
+        Lift currentLift = MinecraftClientData.getLift(lift.getId());
+        value.addProperty("post_lift_present", currentLift != null);
+        value.addProperty("post_lift_same_reference", currentLift == lift);
+        if (currentLift != null) {
+            value.addProperty("post_lift_object_identity", System.identityHashCode(currentLift));
+            value.add("post_original_client_lift", Utilities.getJsonObjectFromData(currentLift));
+        }
+        value.addProperty("post_mtr_render_millis", ((Number) diagnosticField(MainRenderer.class, "lastRenderedMillis")).longValue());
+        value.addProperty("post_sample_nanos", System.nanoTime());
         List<?> priorities = (List<?>) diagnosticField(MainRenderer.class, "CURRENT_RENDERS");
         Map<?, ?> interior = (Map<?, ?>) ((List<?>) priorities.get(0)).get(QueuedRenderLayer.INTERIOR.ordinal());
         StoredMatrixTransformations submitted = null; ModelLift1 model = null; int matches = 0;
@@ -1017,7 +1048,7 @@ public final class LiftProbe {
             TileEntity value = world.getTileEntity(8, FLOOR_Y[floor], 8);
             if (!(value instanceof BlockLiftTrackFloor.BlockEntity)) return false;
             BlockLiftTrackFloor.BlockEntity tile = (BlockLiftTrackFloor.BlockEntity) value;
-            if (!Integer.toString(floor + 1).equals(tile.getFloorNumber()) || !DESCRIPTIONS[floor].equals(tile.getFloorDescription()) || tile.getShouldDing()) return false;
+            if (!Integer.toString(floor + 1).equals(tile.getFloorNumber()) || !DESCRIPTIONS[floor].equals(tile.getFloorDescription()) || tile.getShouldDing() != Boolean.getBoolean("mtr.probeLiftAudio")) return false;
         }
         return true;
     }
@@ -1211,6 +1242,20 @@ public final class LiftProbe {
             }
         } catch (Throwable problem) { fail(problem); }
         closeRidingLogObserver();
+        report.add("lift_audio_sources", liftAudioSources);
+        if (Boolean.getBoolean("mtr.probeLiftAudio") && failure == null) {
+            try {
+                for (String name : new String[]{"arrival", "motor", "door_open", "door_close"}) {
+                    boolean found = false;
+                    for (org.mtr.libraries.com.google.gson.JsonElement element : liftAudioSources) {
+                        JsonObject row = element.getAsJsonObject();
+                        if (row.get("event").getAsString().endsWith("/lift_" + name) && row.get("gain").getAsFloat() > 0) found = true;
+                    }
+                    require(found, "No native positive-gain lift audio source for " + name);
+                }
+                report.addProperty("lift_audio_pass", true);
+            } catch (Throwable problem) { fail(problem); }
+        }
         report.addProperty("passed", failure == null); report.addProperty("setup_teleport_count", setupTeleports);
         if (clientDiagnostics != null) report.add("last_client_diagnostics", clientDiagnostics);
         if (renderSampleDiagnostics != null) report.add("last_render_sample_diagnostics", renderSampleDiagnostics);
@@ -1300,7 +1345,7 @@ public final class LiftProbe {
                     int floor = (expected.y - 72) / 8;
                     require(restored instanceof BlockLiftTrackFloor.BlockEntity, "Saved floor tile lost original type");
                     BlockLiftTrackFloor.BlockEntity tile = (BlockLiftTrackFloor.BlockEntity) restored;
-                    require(Integer.toString(floor + 1).equals(tile.getFloorNumber()) && DESCRIPTIONS[floor].equals(tile.getFloorDescription()) && !tile.getShouldDing(),
+                    require(Integer.toString(floor + 1).equals(tile.getFloorNumber()) && DESCRIPTIONS[floor].equals(tile.getFloorDescription()) && tile.getShouldDing() == Boolean.getBoolean("mtr.probeLiftAudio"),
                         "Saved original floor labels/ding differ");
                 } else if (expected.x == 9 && expected.z == 5) {
                     long[] links = new CompoundTag(tag).getLongArray("track_floor_pos");

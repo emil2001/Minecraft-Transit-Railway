@@ -69,7 +69,7 @@ cd mtr
   "-PmtrAngelica=$MTR_ANGELICA"
 ```
 
-`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.1.jar`, relative to the shared checkout directory.
+`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.2.jar`, relative to the shared checkout directory.
 
 Run the Mappings backend tests separately, using the same path variables:
 
@@ -85,4 +85,4 @@ The backend passes the properties to its nested Core preparation task. Its test 
 
 The wrappers, plugins and Maven dependencies use online repositories, including the GTNH Nexus public repository, Maven Central and Mojang's library repository. A sibling `local-maven` directory can serve as a fallback cache for the configured plugin. An offline build requires a separately populated cache; no fresh offline checkout build is claimed.
 
-These build tasks were checked in isolated source checkouts using pinned local dependencies: 283 backend tests and six Core compatibility tests passed. All 23,386 file payloads in the rebuilt mod matched the accepted singleplayer artifact, with no test probes. The ZIP archive hashes differ, so this establishes matching contents rather than a byte-identical JAR rebuild. Retrieval of every external input on a clean machine remains untested.
+The current build passed 315 backend tests and six Core compatibility tests in the development copies. Its 23,394 production file payloads match the mod used in the native lift test, excluding the diagnostic classes. The ordinary JAR contains no test probes. Retrieval of every external input on a clean machine remains untested.
