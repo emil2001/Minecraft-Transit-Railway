@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.mtr'
+version = '4.0.5-gtnh.0'
+
+repositories { mavenCentral() }
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+sourceSets {
+    buildTools
+    main.java.srcDir layout.buildDirectory.dir('generated/compat')
+}
+
+def targetLibraries = file(providers.gradleProperty('mtrLog4j').getOrElse('../../client/data/libraries'))
+def loggerApi = fileTree(targetLibraries) {
+    include '**/log4j-api-2.0-beta9-fixed.jar'
+}.singleFile
+def compatibleCore = layout.buildDirectory.file('compat/Transport-Simulation-Core-0.0.1.jar')
+
+compileBuildToolsJava.options.compilerArgs += [
+    '--add-exports', 'java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED'
+]
+
+tasks.register('patchCoreLogging', JavaExec) {
+    dependsOn buildToolsClasses
+    classpath = sourceSets.buildTools.runtimeClasspath
+    mainClass = 'org.mtr.gtnh.build.PatchCoreLogging'
+    jvmArgs '--add-exports=java.base/jdk.internal.org.objectweb.asm=ALL-UNNAMED'
+    args file('../libs/Transport-Simulation-Core-0.0.1.jar'), loggerApi,
+        compatibleCore.get().asFile, layout.buildDirectory.dir('generated/compat').get().asFile
+    inputs.files file('../libs/Transport-Simulation-Core-0.0.1.jar'), loggerApi
+    outputs.file compatibleCore
+    outputs.dir layout.buildDirectory.dir('generated/compat')
+}
+
+compileJava.dependsOn patchCoreLogging
+compileJava.options.release = 8
+
+compileTestJava.source file("src/game/java/org/mtr/gtnh/ClientWebserver.java")
+
+dependencies {
+    compileOnly files('../libs/Transport-Simulation-Core-0.0.1.jar')
+    testCompileOnly files('../libs/Transport-Simulation-Core-0.0.1.jar')
+    runtimeOnly files(compatibleCore)
+    implementation files('../libs/Shadow-Libraries-util-0.0.1.jar', '../libs/Shadow-Libraries-net-0.0.1.jar')
+    implementation fileTree(targetLibraries) { include '**/log4j-api-2.0-beta9-fixed.jar' }
+    testRuntimeOnly fileTree(targetLibraries) { include '**/log4j-core-2.0-beta9-fixed.jar' }
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+test {
+    dependsOn patchCoreLogging
+    useJUnitPlatform()
+    testLogging { events 'passed', 'failed', 'skipped' }
+}
+
+tasks.register('productionBuild', GradleBuild) {
+    description = 'Assembles the complete MTR mod and backend with exactly one production remap.'
+    dependsOn classes
+    dir = file('../../mappings/forge/1.7.10-mapping')
+    tasks = ['reobfPortJar']
+    startParameter.offline = gradle.startParameter.offline
+    startParameter.projectProperties = gradle.startParameter.projectProperties + [mtrCorePrepared: 'true',mtrProduction: 'true']
+}

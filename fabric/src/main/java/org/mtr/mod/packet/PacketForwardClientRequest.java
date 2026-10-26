@@ -53,8 +53,14 @@ public final class PacketForwardClientRequest extends PacketHandler {
 
 	@Override
 	public void runServer(MinecraftServer minecraftServer, ServerPlayerEntity serverPlayerEntity) {
+		final int serverPort = Init.getServerPort();
+		if (serverPort <= 0) {
+			// Empty reply paths mark request failure; normal response paths are nonempty.
+			Init.REGISTRY.sendPacketToClient(serverPlayerEntity, new PacketForwardClientRequest("Server webserver is disabled.", "", callbackId));
+			return;
+		}
 		Init.REQUEST_HELPER.sendRequest(
-				String.format("http://localhost:%s%s", Init.getServerPort(), endpoint),
+				String.format("http://localhost:%s%s", serverPort, endpoint),
 				content.isEmpty() ? null : content,
 				(response, path) -> Init.REGISTRY.sendPacketToClient(serverPlayerEntity, new PacketForwardClientRequest(response, path, callbackId))
 		);

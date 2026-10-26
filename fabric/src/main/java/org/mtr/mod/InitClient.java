@@ -7,6 +7,8 @@ import org.mtr.core.data.Station;
 import org.mtr.core.operation.DataRequest;
 import org.mtr.core.servlet.WebServlet;
 import org.mtr.core.servlet.Webserver;
+import org.mtr.gtnh.ClientWebserver;
+import org.mtr.gtnh.CreatorWebResources;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.mtr.libraries.javax.servlet.MultipartConfigElement;
 import org.mtr.libraries.org.eclipse.jetty.servlet.ServletHolder;
@@ -26,7 +28,6 @@ import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.config.Config;
 import org.mtr.mod.data.IGui;
 import org.mtr.mod.entity.EntityRendering;
-import org.mtr.mod.generated.WebserverResources;
 import org.mtr.mod.generated.lang.TranslationProvider;
 import org.mtr.mod.item.ItemBlockClickingBase;
 import org.mtr.mod.item.ItemDriverKey;
@@ -375,11 +376,12 @@ public final class InitClient {
 			// Clientside webserver for locally hosting the online system map
 			// Only start clientside webserver if not in singleplayer
 			if (Init.getServerPort() == 0) {
-				serverPort = Init.findFreePort(0);
-				webserver = new Webserver(serverPort);
+				serverPort = 0;
+				webserver = ClientWebserver.create();
 				webserver.addServlet(new ServletHolder(new ClientServlet()), "/");
 				setupWebserver(webserver);
 				webserver.start();
+				serverPort = ClientWebserver.localPort(webserver);
 			} else {
 				serverPort = Math.max(Init.getServerPort(), 0);
 			}
@@ -552,7 +554,7 @@ public final class InitClient {
 	}
 
 	private static void setupWebserver(Webserver webserver) {
-		webserver.addServlet(new ServletHolder(new ResourcePackCretorWebServlet(WebserverResources::get, "/creator/")), "/creator/*");
+		webserver.addServlet(new ServletHolder(new ResourcePackCretorWebServlet(CreatorWebResources::get, "/creator/")), "/creator/*");
 		webserver.addServlet(new ServletHolder(new ResourcePackCreatorOperationServlet()), "/mtr/api/creator/operation/*");
 		final ServletHolder resourcePackCreatorUploadServletHolder = new ServletHolder(new ResourcePackCreatorUploadServlet());
 		resourcePackCreatorUploadServletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement((String) null));

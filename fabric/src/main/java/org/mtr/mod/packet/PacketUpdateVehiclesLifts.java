@@ -17,6 +17,7 @@ import org.mtr.mapping.mapper.EntityHelper;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.data.VehicleExtension;
+import org.mtr.mod.data.LiftExtension;
 import org.mtr.mod.render.RenderVehicles;
 
 import javax.annotation.Nonnull;
@@ -43,9 +44,9 @@ public final class PacketUpdateVehiclesLifts extends PacketRequestResponseBase {
 	protected void runClientInbound(JsonReader jsonReader) {
 		final MinecraftClientData minecraftClientData = MinecraftClientData.getInstance();
 		final VehicleLiftResponse vehicleLiftResponse = new VehicleLiftResponse(jsonReader, minecraftClientData);
-		final boolean hasUpdate1 = updateVehiclesOrLifts(minecraftClientData.vehicles, vehicleLiftResponse::iterateVehiclesToKeep, vehicleLiftResponse::iterateVehiclesToUpdate, VehicleExtension::dispose, vehicleUpdate -> vehicleUpdate.getVehicle().getId(), vehicleUpdate -> new VehicleExtension(vehicleUpdate, minecraftClientData));
+		final boolean hasUpdate1 = updateVehiclesOrLifts(minecraftClientData.vehicles, vehicleLiftResponse::iterateVehiclesToKeep, vehicleLiftResponse::iterateVehiclesToUpdate, VehicleExtension::dispose, vehicleUpdate -> vehicleUpdate.getVehicle().getId(), vehicleUpdate -> new VehicleExtension(vehicleUpdate, minecraftClientData, millisSinceReceived));
 		final boolean hasUpdate2 = updateVehiclesOrLifts(minecraftClientData.lifts, vehicleLiftResponse::iterateLiftsToKeep, vehicleLiftResponse::iterateLiftsToUpdate, (removedLift) -> {
-		}, NameColorDataBase::getId, lift -> lift);
+		}, NameColorDataBase::getId, lift -> new LiftExtension(lift, minecraftClientData, millisSinceReceived));
 
 		vehicleLiftResponse.iterateSignalBlockUpdates(signalBlockUpdate -> {
 			minecraftClientData.railIdToPreBlockedSignalColors.put(signalBlockUpdate.getRailId(), signalBlockUpdate.getPreBlockedSignalColors());

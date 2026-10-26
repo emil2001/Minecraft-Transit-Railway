@@ -31,9 +31,12 @@ import org.mtr.mod.render.DrivingGuiRenderer;
 import org.mtr.mod.resource.VehicleResource;
 
 import javax.annotation.Nullable;
+import java.util.function.LongSupplier;
 
 public class VehicleExtension extends Vehicle implements Utilities {
 
+	private final LongSupplier millisSinceReceived;
+	private boolean hasSimulated;
 	private double oldSpeed;
 	private int speedLimitKilometersPerHour;
 	@Nullable
@@ -42,7 +45,12 @@ public class VehicleExtension extends Vehicle implements Utilities {
 	public final PersistentVehicleData persistentVehicleData;
 
 	public VehicleExtension(VehicleUpdate vehicleUpdate, Data data) {
+		this(vehicleUpdate, data, () -> 0);
+	}
+
+	public VehicleExtension(VehicleUpdate vehicleUpdate, Data data, LongSupplier millisSinceReceived) {
 		super(vehicleUpdate.getVehicleExtraData(), null, new JsonReader(Utilities.getJsonObjectFromData(vehicleUpdate.getVehicle())), data);
+		this.millisSinceReceived = millisSinceReceived;
 		final PersistentVehicleData tempPersistentVehicleData = MinecraftClientData.getInstance().vehicleIdToPersistentVehicleData.get(getId());
 		if (tempPersistentVehicleData == null) {
 			persistentVehicleData = new PersistentVehicleData(vehicleExtraData.immutableVehicleCars, getTransportMode());
@@ -61,6 +69,11 @@ public class VehicleExtension extends Vehicle implements Utilities {
 	}
 
 	public void simulate(long millisElapsed) {
+		if (!hasSimulated) {
+			// Predict only since this snapshot entered the client packet session.
+			hasSimulated = true;
+			millisElapsed = millisSinceReceived.getAsLong();
+		}
 		final double oldRailProgress = railProgress;
 		oldSpeed = speed;
 		simulate(millisElapsed, null, null);

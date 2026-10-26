@@ -1,6 +1,6 @@
 package org.mtr.mod.screen;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntIntImmutablePair;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.MinecraftClientHelper;

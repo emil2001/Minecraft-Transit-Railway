@@ -13,6 +13,7 @@ import org.mtr.mapping.holder.ServerWorld;
 import org.mtr.mapping.tool.PacketBufferReceiver;
 import org.mtr.mapping.tool.PacketBufferSender;
 import org.mtr.mod.Init;
+import org.mtr.gtnh.RidingPermissions;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,6 +21,7 @@ import javax.annotation.Nullable;
 public final class PacketUpdateVehicleRidingEntities extends PacketRequestResponseBase implements Utilities {
 
 	private final boolean dismount;
+	private ServerPlayerEntity authenticatedPlayer;
 
 	public static PacketUpdateVehicleRidingEntities create(long sidingId, long vehicleId, int ridingCar, double x, double y, double z, boolean isOnGangway, boolean isDriver, boolean manualAccelerate, boolean manualBrake, boolean manualToggleDoors, boolean manualToggleAto, boolean doorOverride) {
 		final UpdateVehicleRidingEntities updateVehicleRidingEntities = new UpdateVehicleRidingEntities(sidingId, vehicleId);
@@ -48,9 +50,17 @@ public final class PacketUpdateVehicleRidingEntities extends PacketRequestRespon
 
 	@Override
 	protected void runServerOutbound(ServerWorld serverWorld, @Nullable ServerPlayerEntity serverPlayerEntity) {
-		super.runServerOutbound(serverWorld, serverPlayerEntity);
-		if (serverPlayerEntity != null) {
+		if (serverPlayerEntity == null) return;
+		authenticatedPlayer = serverPlayerEntity;
+		try {
+			// The data factory validates and binds the sender before the base class can enqueue the operation.
+			super.runServerOutbound(serverWorld, serverPlayerEntity);
 			Init.updateRidingEntity(serverPlayerEntity, dismount);
+		} catch (RidingPermissions.Rejected | org.mtr.libraries.com.google.gson.JsonParseException rejected) {
+			org.apache.logging.log4j.LogManager.getLogger("MTRRiding").debug("Rejected riding request: {}", rejected.getMessage());
+			RidingPermissions.revoke(serverPlayerEntity);
+		} finally {
+			authenticatedPlayer = null;
 		}
 	}
 
@@ -61,7 +71,8 @@ public final class PacketUpdateVehicleRidingEntities extends PacketRequestRespon
 
 	@Override
 	protected SerializedDataBase getDataInstance(JsonReader jsonReader) {
-		return new UpdateVehicleRidingEntities(jsonReader);
+		if (authenticatedPlayer == null) throw new RidingPermissions.Rejected("Missing authenticated server sender");
+		return RidingPermissions.validate(authenticatedPlayer, jsonReader, dismount);
 	}
 
 	@Nonnull

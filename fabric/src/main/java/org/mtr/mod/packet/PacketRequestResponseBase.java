@@ -16,6 +16,7 @@ import org.mtr.mod.Init;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.function.LongSupplier;
 
 /**
  * Sends a round trip request/response. This is meant to be used on the Minecraft client only.
@@ -25,13 +26,16 @@ import javax.annotation.Nullable;
 public abstract class PacketRequestResponseBase extends PacketHandler {
 
 	private final String content;
+	protected final LongSupplier millisSinceReceived;
 
 	public PacketRequestResponseBase(PacketBufferReceiver packetBufferReceiver) {
 		content = packetBufferReceiver.readString();
+		millisSinceReceived = packetBufferReceiver.getMillisSinceReceived();
 	}
 
 	public PacketRequestResponseBase(String content) {
 		this.content = content;
+		millisSinceReceived = () -> 0;
 	}
 
 	@Override

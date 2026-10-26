@@ -39,6 +39,7 @@ public class PIDSConfigScreen extends ScreenExtension implements IGui {
 	private final int displayPage;
 	private final int maxArrivals;
 	private int page = 0;
+	private boolean initialized;
 
 	private static final int MAX_MESSAGE_LENGTH = 2048;
 	private static final int TEXT_FIELDS_Y_OFFSET = SQUARE_SIZE * 8 + TEXT_FIELD_PADDING / 2;
@@ -102,7 +103,9 @@ public class PIDSConfigScreen extends ScreenExtension implements IGui {
 		final int textWidth = GraphicsHolder.getTextWidth(hideArrivalText) + SQUARE_SIZE + TEXT_PADDING * 2;
 
 		IDrawing.setPositionAndWidth(selectAllCheckbox, SQUARE_SIZE, SQUARE_SIZE, PANEL_WIDTH);
-		selectAllCheckbox.setChecked(filterPlatformIds.isEmpty());
+		if (!initialized) {
+			selectAllCheckbox.setChecked(filterPlatformIds.isEmpty());
+		}
 		addChild(new ClickableWidget(selectAllCheckbox));
 
 		IDrawing.setPositionAndWidth(filterButton, SQUARE_SIZE, SQUARE_SIZE * 3, PANEL_WIDTH / 2);
@@ -110,7 +113,9 @@ public class PIDSConfigScreen extends ScreenExtension implements IGui {
 		addChild(new ClickableWidget(filterButton));
 
 		IDrawing.setPositionAndWidth(displayPageInput, SQUARE_SIZE + TEXT_FIELD_PADDING / 2, SQUARE_SIZE * 5 + TEXT_FIELD_PADDING / 2, PANEL_WIDTH / 2 - TEXT_FIELD_PADDING);
-		displayPageInput.setText2(String.valueOf(displayPage + 1));
+		if (!initialized) {
+			displayPageInput.setText2(String.valueOf(displayPage + 1));
+		}
 		addChild(new ClickableWidget(displayPageInput));
 
 		IDrawing.setPositionAndWidth(buttonPrevPage, customMessageWidth, SQUARE_SIZE * 7, SQUARE_SIZE);
@@ -123,16 +128,21 @@ public class PIDSConfigScreen extends ScreenExtension implements IGui {
 			final TextFieldWidgetExtension textFieldMessage = textFieldMessages[i];
 			final int y = TEXT_FIELDS_Y_OFFSET + (SQUARE_SIZE + TEXT_FIELD_PADDING) * (i % getMaxArrivalsPerPage());
 			IDrawing.setPositionAndWidth(textFieldMessage, SQUARE_SIZE + TEXT_FIELD_PADDING / 2, y, width - SQUARE_SIZE * 2 - TEXT_FIELD_PADDING - textWidth);
-			textFieldMessage.setText2(messages[i]);
+			if (!initialized) {
+				textFieldMessage.setText2(messages[i]);
+			}
 			addChild(new ClickableWidget(textFieldMessage));
 
 			final CheckboxWidgetExtension buttonHideArrival = buttonsHideArrival[i];
 			IDrawing.setPositionAndWidth(buttonHideArrival, width - SQUARE_SIZE - textWidth + TEXT_PADDING, y + TEXT_FIELD_PADDING / 2, textWidth);
-			buttonHideArrival.setChecked(hideArrivalArray[i]);
+			if (!initialized) {
+				buttonHideArrival.setChecked(hideArrivalArray[i]);
+			}
 			addChild(new ClickableWidget(buttonHideArrival));
 		}
 
-		setPage(0);
+		initialized = true;
+		setPage(page);
 	}
 
 	private void setPage(int newPage) {
