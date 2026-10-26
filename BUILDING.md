@@ -69,7 +69,7 @@ cd mtr
   "-PmtrAngelica=$MTR_ANGELICA"
 ```
 
-`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.0.jar`, relative to the shared checkout directory.
+`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.1.jar`, relative to the shared checkout directory.
 
 Run the Mappings backend tests separately, using the same path variables:
 

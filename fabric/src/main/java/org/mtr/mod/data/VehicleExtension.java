@@ -77,6 +77,9 @@ public class VehicleExtension extends Vehicle implements Utilities {
 		final double oldRailProgress = railProgress;
 		oldSpeed = speed;
 		simulate(millisElapsed, null, null);
+		if (vehicleExtraData.getSpeedTarget() < 0 || speed == 0) {
+			persistentVehicleData.approachStoppingPoint(oldRailProgress, railProgress, vehicleExtraData.getStoppingPoint());
+		}
 		persistentVehicleData.tick(railProgress, millisElapsed, vehicleExtraData);
 		final MinecraftClient minecraftClient = MinecraftClient.getInstance();
 		final ClientWorld clientWorld = minecraftClient.getWorldMapped();

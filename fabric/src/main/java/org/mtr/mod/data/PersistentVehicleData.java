@@ -68,6 +68,14 @@ public final class PersistentVehicleData {
 		return smoothedRailProgress;
 	}
 
+	public void approachStoppingPoint(double oldRailProgress, double railProgress, double stoppingPoint) {
+		if (railProgress == stoppingPoint) {
+			railProgressSmoothingAdjustment = 0;
+		} else if (oldRailProgress < railProgress && railProgress < stoppingPoint) {
+			railProgressSmoothingAdjustment *= (stoppingPoint - railProgress) / (stoppingPoint - oldRailProgress);
+		}
+	}
+
 	public ObjectArrayList<ScrollingText> getScrollingText(int carNumber) {
 		return getElement(scrollingTexts, carNumber, ObjectArrayList::new);
 	}

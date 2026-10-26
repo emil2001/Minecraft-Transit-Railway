@@ -5,7 +5,7 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.*;
 import org.mtr.mod.Init;
 
-@Mod(modid="mtr",name="Minecraft Transit Railway",version="4.0.5-gtnh.0",acceptedMinecraftVersions="[1.7.10]",
+@Mod(modid="mtr",name="Minecraft Transit Railway",version="4.0.5-gtnh.1",acceptedMinecraftVersions="[1.7.10]",
     dependencies="required-after:Forge@[10.13.4.1614,);after:angelica;after:lwjgl3ify")
 public final class MtrMod {
     @SidedProxy(clientSide="org.mtr.gtnh.ClientProxy",serverSide="org.mtr.gtnh.CommonProxy")

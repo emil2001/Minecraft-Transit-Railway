@@ -550,7 +550,10 @@ public final class InitClient {
 	}
 
 	private static RegistryClient.ModelPredicateProvider checkItemPredicateTag() {
-		return (itemStack, clientWorld, livingEntity) -> itemStack.getOrCreateTag().contains(ItemBlockClickingBase.TAG_POS) ? 1 : 0;
+		return (itemStack, clientWorld, livingEntity) -> {
+			final CompoundTag compoundTag = itemStack.getTag();
+			return compoundTag != null && compoundTag.contains(ItemBlockClickingBase.TAG_POS) ? 1 : 0;
+		};
 	}
 
 	private static void setupWebserver(Webserver webserver) {

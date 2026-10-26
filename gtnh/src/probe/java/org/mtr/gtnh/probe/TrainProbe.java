@@ -50,6 +50,8 @@ import org.mtr.mod.item.ItemBlockClickingBase;
 import org.mtr.mod.packet.*;
 import org.mtr.mod.render.PositionAndRotation;
 import org.mtr.mod.render.RenderVehicleHelper;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
 import org.mtr.mod.resource.VehicleResource;
 import org.mtr.mod.resource.VehicleResourceCache;
 import java.io.*;
@@ -115,6 +117,14 @@ public final class TrainProbe {
     private final SignalModels signalModels=new SignalModels();
     private final JsonArray rideRenderFrameNanos=new JsonArray();
     private long lastRideRenderFrame;
+    private final JsonArray vehicleRenderFrames=new JsonArray();
+    private RenderPoseFrame pendingRenderPose;
+    private long renderPoseFrameNumber;
+    private int renderPoseSkipped,renderPoseDropped;
+    private Double previousRenderedRailProgress;
+    private long previousRenderedVehicle;
+    private long previousRenderedFrame,previousRenderedNanos;
+    private double largestRenderedProgressStep;
     private final StationObjects stationObjects=new StationObjects();
     private final JsonArray timeline=new JsonArray(),transitions=new JsonArray(),screenshots=new JsonArray(),placements=new JsonArray();
     private final List<StoredBlock> expectedSavedBlocks=new ArrayList<>();
@@ -299,14 +309,92 @@ public final class TrainProbe {
         } catch(Throwable problem){fail(problem);}
     }
     @SubscribeEvent public void renderTick(TickEvent.RenderTickEvent event) {
-        if(event.phase!=TickEvent.Phase.END)return;
         try {Minecraft client=Minecraft.getMinecraft();
+            if(event.phase==TickEvent.Phase.START){beginRenderPoseFrame(client,event.renderTickTime);return;}
+            if(event.phase!=TickEvent.Phase.END)return;
+            completeRenderPoseFrame(client);
             if(stage==Stage.RIDE&&failure==null){require(client.gameSettings.limitFramerate==RIDE_FPS_LIMIT,"RIDE FPS limit changed");long now=System.nanoTime();if(rideRenderFrameNanos.size()>0)require(now>lastRideRenderFrame,"Non-increasing actual RIDE render timestamps");rideRenderFrameNanos.add(new JsonPrimitive(now));lastRideRenderFrame=now;}
             if(failure!=null||shotRequest==shotAcknowledged)return;
             if(client.theWorld==null||client.thePlayer==null||++renderedFrames<4)return;
             if("moving".equals(shotLabel)&&(clientSample==null||!clientSample.moving))return;
             capture(client,shotLabel);shotAcknowledged=shotRequest;
         }catch(Throwable problem){fail(problem);}
+    }
+
+    private void beginRenderPoseFrame(Minecraft client,float partial)throws Exception {
+        pendingRenderPose=null;renderPoseFrameNumber++;
+        if(!copyVerified||failure!=null||stage==Stage.FINISHED)return;
+        org.mtr.mapping.holder.Identifier observerId=new org.mtr.mapping.holder.Identifier("mtr","train_render_pose_"+runId);
+        MainRenderer.cancelRender(observerId);
+        if(stage.ordinal()<Stage.PICKUP_A.ordinal()||stage.ordinal()>Stage.RETURN_IDLE.ordinal()||vehicleId==0)return;
+        if(client.theWorld==null||client.thePlayer==null||client.currentScreen!=null||client.skipRenderWorld||client.isGamePaused()||client.renderViewEntity!=client.thePlayer)return;
+        assertOwnedServer(client.getIntegratedServer());
+        VehicleExtension vehicle=observedTrain();if(vehicle==null)return;
+        RenderPoseFrame frame=new RenderPoseFrame(client,vehicle,renderPoseFrameNumber,partial);pendingRenderPose=frame;
+        // A marker in the original renderer proves this frame prepared the train pose, even between 20 Hz game-clock updates.
+        MainRenderer.scheduleRender(observerId,false,QueuedRenderLayer.TEXT,(graphics,offset)->{
+            if(org.mtr.mapping.mapper.OptimizedRenderer.renderingShadows())return;
+            frame.markerCalls++;
+            try {frame.markerStamp=((Number)diagnosticField(MainRenderer.class,"lastRenderedMillis")).longValue();}
+            catch(ReflectiveOperationException problem){fail(problem);}
+        });
+    }
+
+    private VehicleExtension observedTrain() {
+        VehicleExtension result=null;
+        for(VehicleExtension candidate:MinecraftClientData.getInstance().vehicles)if(candidate.getId()==vehicleId){require(result==null,"Duplicate observed train ID");result=candidate;}
+        return result;
+    }
+
+    private void completeRenderPoseFrame(Minecraft client)throws Exception {
+        RenderPoseFrame frame=pendingRenderPose;pendingRenderPose=null;if(frame==null)return;
+        if(failure!=null||frame.markerCalls!=1||client.theWorld!=frame.world||client.thePlayer!=frame.player||observedTrain()!=frame.vehicle){renderPoseSkipped++;return;}
+        long after=((Number)diagnosticField(MainRenderer.class,"lastRenderedMillis")).longValue();
+        if(after!=frame.markerStamp){renderPoseSkipped++;return;}
+        VehicleExtension vehicle=frame.vehicle;JsonObject value=frame.value;
+        double smoothed=((Number)diagnosticField(vehicle.persistentVehicleData,"smoothedRailProgress")).doubleValue();
+        double source=inheritedNumber(vehicle,"railProgress").doubleValue();
+        value.addProperty("sampling_boundary","RenderTick.END after actual non-shadow MainRenderer TEXT marker");
+        value.addProperty("read_only_smoothed_field",true);value.addProperty("smoothed_getter_called_by_probe",false);
+        value.addProperty("frame_ended_nanos",System.nanoTime());value.addProperty("stage_at_end",stage.name());
+        value.addProperty("mtr_marker_calls",frame.markerCalls);value.addProperty("mtr_marker_millis",frame.markerStamp);value.addProperty("mtr_millis_after",after);
+        value.addProperty("vehicle_identity_matches_start",true);
+        value.addProperty("smoothed_rail_progress",smoothed);value.addProperty("source_rail_progress",source);value.addProperty("source_advance_during_render",source-value.get("source_rail_progress_before").getAsDouble());
+        value.addProperty("smoothing_adjustment",(Number)diagnosticField(vehicle.persistentVehicleData,"railProgressSmoothingAdjustment"));
+        value.addProperty("source_speed",vehicle.getSpeed());value.addProperty("source_stopping_point",vehicle.vehicleExtraData.getStoppingPoint());value.addProperty("source_deceleration",vehicle.vehicleExtraData.getDeceleration());
+        value.addProperty("source_total_vehicle_length",vehicle.vehicleExtraData.getTotalVehicleLength());value.addProperty("door_value",vehicle.persistentVehicleData.getDoorValue());
+        boolean riding=VehicleRidingMovement.isRiding(vehicle.getId());value.addProperty("riding",riding);value.addProperty("pose_semantics",riding?"smoothed rail parameter used for passenger train; not final camera-relative geometry":"smoothed rail parameter used for absolute outside train pose");
+        value.addProperty("ray_traced_visible",vehicle.persistentVehicleData.rayTracing.length>0&&vehicle.persistentVehicleData.rayTracing[0]);
+        value.add("snapshot_prediction_after",snapshotPredictionDiagnostics(vehicle));value.add("riding_state",originalRidingDiagnostics());
+        ClientSample sample=clientSample;
+        value.addProperty("geometry_cache_sample_matches_instance",sample!=null&&sample.sourceVehicle==vehicle);
+        if(sample!=null&&sample.sourceVehicle==vehicle){value.addProperty("geometry_cache_ready_at_client_tick",sample.vehicleGeometryCacheReady);value.addProperty("geometry_cache_sample_tick",sample.tick);}
+        CoreSample core=coreSample;JsonObject authority=new JsonObject();authority.addProperty("present",core!=null);
+        if(core!=null){authority.addProperty("sampled_at_millis",core.at);authority.addProperty("age_millis",System.currentTimeMillis()-core.at);authority.addProperty("vehicle_id",Long.toString(core.vehicle));authority.addProperty("same_vehicle",core.vehiclePresent&&core.vehicle==vehicle.getId());authority.addProperty("moving",core.moving);authority.addProperty("on_route",core.onRoute);authority.addProperty("stopped_platform",Long.toString(core.stoppedPlatform));authority.addProperty("this_platform",Long.toString(core.thisPlatform));authority.addProperty("next_platform",Long.toString(core.nextPlatform));
+            for(String name:new String[]{"railProgress","speed","nextStoppingIndexAto","elapsedDwellTime","targetSpeedOverride"})if(core.vehicleJson.has(name))authority.add(name,core.vehicleJson.get(name));}
+        value.add("immutable_core_snapshot",authority);
+        if(previousRenderedRailProgress!=null&&previousRenderedVehicle==vehicle.getId()){double delta=smoothed-previousRenderedRailProgress;value.addProperty("smoothed_progress_step",delta);value.addProperty("previous_valid_frame",previousRenderedFrame);value.addProperty("consecutive_valid_frames",value.get("frame").getAsLong()==previousRenderedFrame+1);value.addProperty("step_elapsed_millis",(value.get("frame_started_nanos").getAsLong()-previousRenderedNanos)/1_000_000D);largestRenderedProgressStep=Math.max(largestRenderedProgressStep,Math.abs(delta));}
+        previousRenderedRailProgress=smoothed;previousRenderedVehicle=vehicle.getId();previousRenderedFrame=value.get("frame").getAsLong();previousRenderedNanos=value.get("frame_started_nanos").getAsLong();
+        if(vehicleRenderFrames.size()<10000)vehicleRenderFrames.add(value);else renderPoseDropped++;
+    }
+
+    private static Number inheritedNumber(Object value,String name)throws Exception {
+        for(Class<?> type=value.getClass();type!=null;type=type.getSuperclass())try {Field field=type.getDeclaredField(name);field.setAccessible(true);return (Number)field.get(value);}catch(NoSuchFieldException missing){}
+        throw new NoSuchFieldException(name);
+    }
+
+    private final class RenderPoseFrame {
+        final Object world,player;final VehicleExtension vehicle;final JsonObject value=new JsonObject();int markerCalls;long markerStamp;
+        RenderPoseFrame(Minecraft client,VehicleExtension vehicle,long frame,float partial)throws Exception {
+            world=client.theWorld;player=client.thePlayer;this.vehicle=vehicle;
+            value.addProperty("frame",frame);value.addProperty("frame_started_nanos",System.nanoTime());value.addProperty("client_tick_at_start",clientTicks);value.addProperty("stage_at_start",stage.name());value.addProperty("partial_tick",partial);
+            value.addProperty("vehicle_id",Long.toString(vehicle.getId()));value.addProperty("vehicle_instance_identity",System.identityHashCode(vehicle));value.addProperty("persistent_data_identity",System.identityHashCode(vehicle.persistentVehicleData));
+            value.addProperty("source_rail_progress_before",inheritedNumber(vehicle,"railProgress"));value.addProperty("source_speed_before",vehicle.getSpeed());
+            value.addProperty("smoothed_rail_progress_before",(Number)diagnosticField(vehicle.persistentVehicleData,"smoothedRailProgress"));value.addProperty("smoothing_adjustment_before",(Number)diagnosticField(vehicle.persistentVehicleData,"railProgressSmoothingAdjustment"));
+            value.addProperty("mtr_millis_before",(Number)diagnosticField(MainRenderer.class,"lastRenderedMillis"));value.addProperty("native_frame_duration_millis",org.mtr.mapping.holder.MinecraftClient.getInstance().getLastFrameDuration()*50);
+            java.lang.reflect.Method step=MainRenderer.class.getDeclaredMethod("getMillisElapsed");step.setAccessible(true);value.addProperty("mtr_render_step_millis",(Number)step.invoke(null));
+            value.addProperty("first_prediction_render",!(Boolean)diagnosticField(vehicle,"hasSimulated"));value.add("snapshot_prediction_before",snapshotPredictionDiagnostics(vehicle));
+        }
     }
     private void capture(Minecraft client,String label)throws Exception {
         require(client.currentScreen==null,"World framebuffer is not rendered");String name="mtr-train-probe-"+runId+"-"+label+".png";
@@ -1130,6 +1218,8 @@ public final class TrainProbe {
         JsonArray reasons=new JsonArray();for(JsonObject value:rejectionReasons)reasons.add(value);report.add("riding_rejections_first_64",reasons);
         JsonArray nativeCorrections=new JsonArray();for(JsonObject value:corrections)nativeCorrections.add(value);report.add("actual_native_s08_packets",nativeCorrections);
         report.add("signal_native_bake_gates",signalModels.gates);report.addProperty("signal_native_bakes_before_and_after_refresh",signalModels.before&&signalModels.after);report.addProperty("configured_fps_limit",RIDE_FPS_LIMIT);report.add("ride_render_frame_nanos",rideRenderFrameNanos);report.addProperty("ride_render_frame_count",rideRenderFrameNanos.size());if(rideRenderFrameNanos.size()>=2)report.addProperty("ride_render_observed_fps",rideFrameRate(rideRenderFrameNanos));
+        report.add("vehicle_render_pose_frames",vehicleRenderFrames);report.addProperty("vehicle_render_pose_frames_skipped",renderPoseSkipped);report.addProperty("vehicle_render_pose_frames_dropped",renderPoseDropped);report.addProperty("vehicle_render_pose_frame_limit",10000);
+        report.addProperty("vehicle_render_pose_diagnostic_only",true);report.addProperty("vehicle_render_pose_discontinuity_acceptance_installed",false);report.addProperty("largest_observed_smoothed_progress_step",largestRenderedProgressStep);
         report.add("station_objects",stationObjects.result);report.add("timeline",timeline);report.add("transitions",transitions);report.add("screenshots",screenshots);report.add("original_one_shot_item_uses",placements);
         report.addProperty("dashboard_dto_packets_used",true);report.addProperty("dashboard_mouse_layout_accepted",false);report.addProperty("save_reopened",false);report.addProperty("audio_accepted",false);report.addProperty("remote_multiplayer_accepted",false);
         report.addProperty("audio_tactile_loop_refresh_accepted",tactileAudio.accepted);report.add("audio_tactile_loop_refresh",tactileAudio.result);report.addProperty("audio_native_world_unload_accepted",audioUnload.accepted);report.add("audio_native_world_unload",audioUnload.result);

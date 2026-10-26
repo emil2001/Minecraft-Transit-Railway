@@ -63,6 +63,7 @@ import org.mtr.mapping.holder.BlockState;
 import org.mtr.mapping.holder.CompoundTag;
 import org.mtr.mapping.holder.Direction;
 import org.mtr.mapping.mapper.MinecraftClientHelper;
+import org.mtr.mapping.mapper.GraphicsHolder;
 import org.mtr.mapping.tool.BlockStateDefinition;
 import org.mtr.mapping.tool.BlockStateTileEntity;
 import org.mtr.mapping.tool.PlayerPhysics;
@@ -80,6 +81,14 @@ import org.mtr.mod.item.ItemLiftRefresher;
 import org.mtr.mod.packet.PacketPressLiftButton;
 import org.mtr.mod.packet.PacketUpdateData;
 import org.mtr.mod.packet.PacketUpdateLiftTrackFloorConfig;
+import org.mtr.mod.model.ModelLift1;
+import org.mtr.mod.render.MainRenderer;
+import org.mtr.mod.render.QueuedRenderLayer;
+import org.mtr.mod.render.StoredMatrixTransformations;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector4f;
 
 import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
@@ -88,6 +97,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.nio.FloatBuffer;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -164,6 +174,11 @@ public final class LiftProbe {
     private final JsonArray timeline = new JsonArray(), transitions = new JsonArray(), screenshots = new JsonArray();
     private final JsonArray placements = new JsonArray(), interactions = new JsonArray();
     private final JsonArray pauseOptionCorrections = new JsonArray();
+    private final JsonArray cabinRenderWitnesses = new JsonArray();
+    private int stationaryRidingWitnesses, droppedRenderWitnesses;
+    private int lastScriptedControlTick = -1000;
+    private static final double CABIN_JITTER_MAX_RANGE = .001;
+    private double ridingFloorMinimum = Double.POSITIVE_INFINITY, ridingFloorMaximum = Double.NEGATIVE_INFINITY;
     private final List<StoredBlock> expectedSavedBlocks = new ArrayList<>();
     private final DoorCycle[] doors = {new DoorCycle(), new DoorCycle(), new DoorCycle()};
     private final DoorCycle[] landingDoors = {new DoorCycle(), new DoorCycle(), new DoorCycle()};
@@ -197,7 +212,7 @@ public final class LiftProbe {
                 reserveNewSave(client);
                 report.addProperty("menu_class", screen);
                 client.gameSettings.pauseOnLostFocus = false;
-                client.gameSettings.thirdPersonView = 1;
+                client.gameSettings.thirdPersonView = 0;
                 client.gameSettings.renderDistanceChunks = 5;
                 client.gameSettings.saveOptions();
                 advance(Stage.WORLD);
@@ -250,6 +265,7 @@ public final class LiftProbe {
             } else if (current == Stage.GRAVITY && jumpClientTicks++ < 2) {
                 key(client.gameSettings.keyBindJump, true);
             }
+            if (movementControlsActive(client)) lastScriptedControlTick = clientTicks;
 
             Lift lift = liftId == 0 ? findOnlyClientLift() : MinecraftClientData.getLift(liftId);
             if (current == Stage.LABELS && clientAcknowledged != current && clientStandReady(client)) {
@@ -515,6 +531,7 @@ public final class LiftProbe {
             long mtrRenderedMillis = eligible ? ((Number) diagnosticField(org.mtr.mod.render.MainRenderer.class, "lastRenderedMillis")).longValue() : -1;
             ClientSample sampled = renderSampleGate.sample(event.phase, eligible, client.theWorld, client.thePlayer, lift, tick, mtrRenderedMillis,
                 () -> new ClientSample(client, lift, tick, renderSampleGate.frame, mtrRenderedMillis));
+            if (event.phase == TickEvent.Phase.START && eligible && lift != null) scheduleCabinRenderWitness(client, lift, event.renderTickTime);
             if (event.phase != TickEvent.Phase.END) return;
             JsonObject diagnostic = new JsonObject(); diagnostic.addProperty("sampling_boundary", "RenderTick.END after original MTR world render");
             diagnostic.addProperty("frame", renderSampleGate.frame); diagnostic.addProperty("native_client_tick", tick);
@@ -536,6 +553,87 @@ public final class LiftProbe {
             screenshots.add(value);
             shotAcknowledged = shotRequest;
         } catch (Throwable problem) { fail(problem); }
+    }
+
+    private void scheduleCabinRenderWitness(Minecraft client, Lift lift, float partial) throws Exception {
+        org.mtr.mapping.holder.Identifier id = new org.mtr.mapping.holder.Identifier("mtr", "lift_probe_witness_" + runId);
+        MainRenderer.cancelRender(id);
+        if (stage != Stage.PICKUP && stage != Stage.UP && stage != Stage.TOP && stage != Stage.DOWN && stage != Stage.BOTTOM) return;
+        net.minecraft.client.entity.EntityClientPlayerMP player = client.thePlayer;
+        JsonObject value = new JsonObject(); value.addProperty("frame", renderSampleGate.frame); value.addProperty("phase", stage.name());
+        value.addProperty("partial_tick", partial); value.addProperty("frame_started_nanos", System.nanoTime());
+        value.addProperty("first_person", client.gameSettings.thirdPersonView == 0); value.addProperty("riding_at_frame_start", VehicleRidingMovement.isRiding(lift.getId()));
+        double originY = player.lastTickPosY + (player.posY - player.lastTickPosY) * partial;
+        value.addProperty("start_feet_y", player.boundingBox.minY); value.addProperty("start_pos_y", player.posY);
+        value.addProperty("start_prev_pos_y", player.prevPosY); value.addProperty("start_last_tick_pos_y", player.lastTickPosY);
+        value.addProperty("start_native_origin_y", originY);
+        value.addProperty("start_interpolation_mismatch_y", player.boundingBox.minY - originY + player.yOffset - player.ySize);
+        // TEXT runs after the actual INTERIOR callbacks; inspect their submitted transform, not a freshly recomputed pose.
+        MainRenderer.scheduleRender(id, false, QueuedRenderLayer.TEXT, (graphics, offset) -> {
+            if (org.mtr.mapping.mapper.OptimizedRenderer.renderingShadows()) return;
+            try { captureCabinRenderWitness(client, lift, graphics, offset, value); }
+            catch (Throwable problem) { value.addProperty("observer_error", problem.toString()); fail(problem); }
+            if (cabinRenderWitnesses.size() < 4096) cabinRenderWitnesses.add(value); else droppedRenderWitnesses++;
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void captureCabinRenderWitness(Minecraft client, Lift lift, GraphicsHolder graphics, org.mtr.mapping.holder.Vector3d offset, JsonObject value) throws Exception {
+        List<?> priorities = (List<?>) diagnosticField(MainRenderer.class, "CURRENT_RENDERS");
+        Map<?, ?> interior = (Map<?, ?>) ((List<?>) priorities.get(0)).get(QueuedRenderLayer.INTERIOR.ordinal());
+        StoredMatrixTransformations submitted = null; ModelLift1 model = null; int matches = 0;
+        for (Object callbacks : interior.values()) for (Object callback : (List<?>) callbacks) {
+            StoredMatrixTransformations transform = null; ModelLift1 candidate = null;
+            for (Field field : callback.getClass().getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+                field.setAccessible(true); Object captured = field.get(callback);
+                if (captured instanceof StoredMatrixTransformations) transform = (StoredMatrixTransformations) captured;
+                if (captured instanceof ModelLift1) candidate = (ModelLift1) captured;
+            }
+            if (transform != null && candidate != null) { submitted = transform; model = candidate; matches++; }
+        }
+        value.addProperty("completed_interior_lift_callbacks", matches);
+        if (matches == 0) { value.addProperty("geometry_witness_valid", false); return; }
+        require(matches == 1, "Expected one actual ModelLift1 INTERIOR callback in owned single-lift world");
+        value.addProperty("geometry_witness_valid", true);
+        value.addProperty("submitted_use_default_offset", submitted.useDefaultOffset);
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(16); GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buffer);
+        Matrix4f view = new Matrix4f(); view.load(buffer); Matrix4f inverse = Matrix4f.invert(view, null);
+        require(inverse != null, "Singular native world view during cabin witness");
+        Object floor = diagnosticField(model, "main");
+        Vector4f floorPivot = new Vector4f(((Number) diagnosticField(floor, "pivotX")).floatValue() / 16,
+            ((Number) diagnosticField(floor, "pivotY")).floatValue() / 16, ((Number) diagnosticField(floor, "pivotZ")).floatValue() / 16, 1);
+        submitted.transform(graphics, offset);
+        Vector4f submittedFloor;
+        try { submittedFloor = Matrix4f.transform(graphics.copyPositionMatrix().data, floorPivot, null); }
+        finally { graphics.pop(); }
+        Vector4f eyeFloor = Matrix4f.transform(view, submittedFloor, null);
+        value.addProperty("sampling_boundary", "MainRenderer TEXT after actual ModelLift1 INTERIOR callback, before HUD");
+        value.addProperty("witness_source", "completed callback captured StoredMatrixTransformations + actual floor pivot + current GraphicsHolder/native GL view; no extra draw");
+        value.addProperty("native_render_manager_origin_y", net.minecraft.client.renderer.entity.RenderManager.renderPosY);
+        value.addProperty("native_camera_world_y", net.minecraft.client.renderer.entity.RenderManager.renderPosY + inverse.m31);
+        value.addProperty("submitted_floor_world_y", net.minecraft.client.renderer.entity.RenderManager.renderPosY + submittedFloor.y);
+        double relativeY = submittedFloor.y - inverse.m31;
+        value.addProperty("submitted_floor_camera_relative_y", relativeY); value.addProperty("submitted_floor_eye_space_y", eyeFloor.y);
+        value.addProperty("post_move_feet_y", client.thePlayer.boundingBox.minY);
+        value.addProperty("post_move_pos_y", client.thePlayer.posY); value.addProperty("post_move_prev_pos_y", client.thePlayer.prevPosY);
+        value.addProperty("post_move_last_tick_pos_y", client.thePlayer.lastTickPosY);
+        value.addProperty("ticks_since_scripted_controls", clientTicks - lastScriptedControlTick);
+        value.addProperty("movement_controls_active", movementControlsActive(client));
+        boolean stationary = VehicleRidingMovement.isRiding(lift.getId()) && clientBoardingAuthorized && !submitted.useDefaultOffset
+            && (stage == Stage.UP || stage == Stage.DOWN) && client.gameSettings.thirdPersonView == 0
+            && clientTicks - lastScriptedControlTick >= 2 && !movementControlsActive(client);
+        value.addProperty("stationary_rider_during_trip", stationary);
+        if (stationary) { stationaryRidingWitnesses++; ridingFloorMinimum = Math.min(ridingFloorMinimum, relativeY); ridingFloorMaximum = Math.max(ridingFloorMaximum, relativeY); }
+    }
+
+    private static boolean movementControlsActive(Minecraft client) {
+        for (KeyBinding binding : new KeyBinding[]{client.gameSettings.keyBindForward, client.gameSettings.keyBindBack,
+                client.gameSettings.keyBindLeft, client.gameSettings.keyBindRight, client.gameSettings.keyBindJump,
+                client.gameSettings.keyBindSneak, client.gameSettings.keyBindSprint}) if (binding.getIsKeyPressed()) return true;
+        net.minecraft.util.MovementInput input = client.thePlayer.movementInput;
+        return client.thePlayer.moveForward != 0 || client.thePlayer.moveStrafing != 0 || client.thePlayer.isSneaking()
+            || input != null && (input.moveForward != 0 || input.moveStrafe != 0 || input.jump || input.sneak);
     }
 
     private ClientSample nextRenderedClientSample() {
@@ -1108,12 +1206,24 @@ public final class LiftProbe {
                 require(Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS)
                     && runId.equals(new String(Files.readAllBytes(marker), StandardCharsets.UTF_8)), "Owned save marker changed after shutdown");
                 verifySavedAnvil(); verifySavedCore();
+                require(stationaryRidingWitnesses >= 10, "Too few actual first-person stationary rider render witnesses");
+                require(ridingFloorMaximum - ridingFloorMinimum < CABIN_JITTER_MAX_RANGE, "Submitted cabin geometry jitters relative to camera: range=" + (ridingFloorMaximum - ridingFloorMinimum));
             }
         } catch (Throwable problem) { fail(problem); }
         closeRidingLogObserver();
         report.addProperty("passed", failure == null); report.addProperty("setup_teleport_count", setupTeleports);
         if (clientDiagnostics != null) report.add("last_client_diagnostics", clientDiagnostics);
         if (renderSampleDiagnostics != null) report.add("last_render_sample_diagnostics", renderSampleDiagnostics);
+        report.add("cabin_submitted_geometry_frames", cabinRenderWitnesses); report.addProperty("cabin_render_witnesses_dropped", droppedRenderWitnesses);
+        report.addProperty("stationary_riding_render_witnesses", stationaryRidingWitnesses);
+        report.addProperty("cabin_render_witness_is_framebuffer_pixel_tracking", false);
+        report.addProperty("cabin_jitter_max_range_blocks", CABIN_JITTER_MAX_RANGE);
+        report.addProperty("jitter_pass", stationaryRidingWitnesses >= 10 && ridingFloorMaximum - ridingFloorMinimum < CABIN_JITTER_MAX_RANGE);
+        report.addProperty("stationary_input_settle_ticks", 2);
+        if (stationaryRidingWitnesses > 0) {
+            report.addProperty("stationary_cabin_camera_relative_y_min", ridingFloorMinimum); report.addProperty("stationary_cabin_camera_relative_y_max", ridingFloorMaximum);
+            report.addProperty("stationary_cabin_camera_relative_y_range", ridingFloorMaximum - ridingFloorMinimum);
+        }
         report.add("owned_pause_on_lost_focus_corrections", pauseOptionCorrections);
         report.addProperty("ride_teleport_count", 0); report.addProperty("probe_motion_writes", 0);
         report.addProperty("s08_observed_after_channel_install", s08.get()); report.addProperty("c03_observed_after_channel_install", c03.get());
