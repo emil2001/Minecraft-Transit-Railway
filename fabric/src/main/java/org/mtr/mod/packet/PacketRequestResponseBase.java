@@ -54,7 +54,7 @@ public abstract class PacketRequestResponseBase extends PacketHandler {
 	}
 
 	protected void runServerOutbound(ServerWorld serverWorld, @Nullable ServerPlayerEntity serverPlayerEntity) {
-		Init.sendMessageC2S(getKey(), serverWorld.getServer(), new World(serverWorld.data), getDataInstance(new JsonReader(Utilities.parseJson(content))), responseType() == ResponseType.NONE ? null : responseData -> {
+		Init.sendMessageC2S(getKey(), serverWorld.getServer(), new World(serverWorld.data), getDataInstance(new JsonReader(Utilities.parseJson(content)), serverPlayerEntity), responseType() == ResponseType.NONE ? null : responseData -> {
 			final JsonObject responseJson = Utilities.getJsonObjectFromData(responseData);
 			if (responseType() == ResponseType.PLAYER) {
 				if (serverPlayerEntity != null) {
@@ -80,6 +80,10 @@ public abstract class PacketRequestResponseBase extends PacketHandler {
 	protected abstract PacketRequestResponseBase getInstance(String content);
 
 	protected abstract SerializedDataBase getDataInstance(JsonReader jsonReader);
+
+	protected SerializedDataBase getDataInstance(JsonReader jsonReader, @Nullable ServerPlayerEntity sender) {
+		return getDataInstance(jsonReader);
+	}
 
 	@Nonnull
 	protected abstract String getKey();

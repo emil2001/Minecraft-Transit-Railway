@@ -52,12 +52,16 @@ import java.util.concurrent.atomic.AtomicInteger;
     dependencies="required-after:mtr", acceptableRemoteVersions="*")
 public final class DedicatedLiftProbe {
     private static final String[] PANEL_NAMES={"lift_panel_even_1","lift_panel_even_2","lift_panel_odd_1","lift_panel_odd_2"};
+    private static final int[] FLOOR_HEIGHTS={72,112,152,192};
+    private static final int TOP=192,VERTICAL_CLICK=190;
     private Path root,node,coord;
     private String runId,role,worldName,artifactHash,phase="JOIN",error;
     private int ticks,phaseTicks,clientTicks,clientPhaseTicks,clickSent=-1,refreshIndex,menuTicks;
     private long deadline;
-    private boolean prepared,connecting,finished;
+    private boolean prepared,connecting,finished,fixtureReady,playerPositioned;
     private volatile boolean observerReady;
+    private volatile JsonObject coreSnapshot=new JsonObject(),firstInterest;
+    private volatile String serverPlayerUuid="",clientSessionUuid="";
     private String clientPhase="",screenshotPhase="";
     private Object observedManager;
     private final AtomicInteger effects=new AtomicInteger(),liftCount=new AtomicInteger(-1);
@@ -116,10 +120,10 @@ public final class DedicatedLiftProbe {
         require(!Files.isSymbolicLink(file)&&!Files.isSymbolicLink(temporary)&&coord.toRealPath().equals(coord),"Coord escaped ownership");
         Files.write(temporary,value.toString().getBytes(StandardCharsets.UTF_8));Files.move(temporary,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
     }
-    private void publish()throws IOException{JsonObject value=envelope();value.addProperty("server_tick",ticks);value.addProperty("phase_ticks",phaseTicks);value.addProperty("refresh_index",refreshIndex);value.addProperty("lift_count",liftCount.get());write("targeted-control.json",value);}
+    private void publish()throws IOException{JsonObject value=envelope();value.addProperty("server_tick",ticks);value.addProperty("phase_ticks",phaseTicks);value.addProperty("refresh_index",refreshIndex);value.addProperty("lift_count",liftCount.get());value.add("core_snapshot",coreSnapshot);if(firstInterest!=null)value.add("first_client_interest",firstInterest);write("targeted-control.json",value);}
     private void advance(String next)throws IOException{phase=next;phaseTicks=0;publish();}
     private void failure(Throwable problem){if(error!=null)return;error=problem.toString();String failedPhase=phase;phase="FAILED";problem.printStackTrace();try{JsonObject value=report();value.addProperty("error",error);value.addProperty("failed_phase",failedPhase);write("targeted-"+(role.equals("server")?"server":"a")+"-report.json",value);if(role.equals("server"))publish();}catch(Exception output){output.printStackTrace();}}
-    private JsonObject report(){JsonObject value=envelope();value.add("interactions",interactions);value.add("refresh_results",refreshResults);value.add("panel_results",panelResults);value.add("client_evidence",clientEvidence);synchronized(chats){value.add("chats",chats);}synchronized(receivedEffects){value.add("received_effects",receivedEffects);}value.addProperty("effects_received",effects.get());value.addProperty("lift_count",liftCount.get());return value;}
+    private JsonObject report(){JsonObject value=envelope();value.add("interactions",interactions);value.add("refresh_results",refreshResults);value.add("panel_results",panelResults);value.add("client_evidence",clientEvidence);synchronized(chats){value.add("chats",chats);}synchronized(receivedEffects){value.add("received_effects",receivedEffects);}value.addProperty("effects_received",effects.get());value.addProperty("lift_count",liftCount.get());value.add("core_snapshot",coreSnapshot);if(firstInterest!=null)value.add("first_client_interest",firstInterest);value.addProperty("spawn_prepared_before_join",fixtureReady);return value;}
     private JsonObject clientAck()throws IOException{Path path=coord.resolve("targeted-a-report.json");if(!Files.isRegularFile(path))return null;JsonObject value=json(path);require(runId.equals(string(value,"run_id"))&&artifactHash.equals(string(value,"mtr_sha256")),"Foreign ACK");return value;}
     private static BlockState state(net.minecraft.world.World world,int x,int y,int z){return new org.mtr.mapping.holder.World(world).getBlockState(new BlockPos(x,y,z));}
     private static JsonObject nativeBlock(net.minecraft.world.World world,int x,int y,int z){
@@ -133,7 +137,30 @@ public final class DedicatedLiftProbe {
         Field mainField=Init.class.getDeclaredField("main");mainField.setAccessible(true);Main main=(Main)mainField.get(null);require(main!=null,"Original server Main missing");Field field=Main.class.getDeclaredField("simulators");field.setAccessible(true);
         for(Object candidate:(Iterable<?>)field.get(main)){Simulator actual=(Simulator)candidate;if("minecraft/overworld".equals(actual.dimension))return actual;}throw new AssertionError("Original overworld simulator missing");
     }
-    private void sampleCore(){if(simulator!=null&&corePending.compareAndSet(false,true))simulator.run(()->{try{liftCount.set(simulator.lifts.size());}finally{corePending.set(false);}});}
+    private static JsonObject position(org.mtr.core.data.Position position){JsonObject value=new JsonObject();value.addProperty("x",position.getX());value.addProperty("y",position.getY());value.addProperty("z",position.getZ());return value;}
+    private void sampleCore(){if(simulator!=null&&corePending.compareAndSet(false,true))simulator.run(()->{try{
+        JsonObject snapshot=new JsonObject();JsonArray lifts=new JsonArray();
+        simulator.lifts.forEach(lift->{JsonObject value=new JsonObject();value.addProperty("id",lift.getId());value.addProperty("valid",lift.isValid());JsonArray floors=new JsonArray();lift.iterateFloors(floor->floors.add(position(floor.getPosition())));value.add("floors",floors);lifts.add(value);});
+        snapshot.add("lifts",lifts);snapshot.addProperty("lift_count",simulator.lifts.size());
+        JsonArray clients=new JsonArray();
+        for(org.mtr.core.data.Client client:simulator.clients){JsonObject interest=position(client.getPosition());interest.addProperty("uuid",client.uuid.toString());interest.addProperty("radius",client.getUpdateRadius());interest.addProperty("sampled_server_tick",ticks);clients.add(interest);snapshot.add("client_interest",interest);if(firstInterest==null&&client.getUpdateRadius()>0)firstInterest=interest;}
+        snapshot.add("clients",clients);snapshot.addProperty("server_player_uuid",serverPlayerUuid);snapshot.addProperty("client_session_uuid",clientSessionUuid);
+        coreSnapshot=snapshot;liftCount.set(simulator.lifts.size());
+    }catch(Throwable problem){failure(problem);}finally{corePending.set(false);}});}
+
+    private void prepareFixture(WorldServer world,EntityPlayerMP player)throws Exception{
+        require(player==null,"High spawn must be prepared before the first player joins");
+        world.getChunkFromChunkCoords(0,0);require(world.getChunkProvider().chunkExists(0,0),"Owned fixture chunk missing");
+        world.getGameRules().setOrCreateGameRule("doMobSpawning","false");world.difficultySetting=net.minecraft.world.EnumDifficulty.PEACEFUL;
+        for(int x=0;x<16;x++)for(int z=4;z<16;z++){
+            for(int y=TOP-3;y<=TOP+4;y++)world.setBlock(x,y,z,net.minecraft.init.Blocks.air,0,2);
+            // Keep the gap in front of the shaft clear for the downward native ray to y=190.
+            if(z<=6||z>=10)world.setBlock(x,TOP-1,z,net.minecraft.init.Blocks.stone,0,2);
+        }
+        for(int x=7;x<=9;x++)for(int z=7;z<=9;z++)for(int y=FLOOR_HEIGHTS[0];y<=TOP+4;y++)world.setBlock(x,y,z,net.minecraft.init.Blocks.air,0,2);
+        for(int y=FLOOR_HEIGHTS[0];y<=TOP;y++){boolean floor=false;for(int height:FLOOR_HEIGHTS)floor|=height==y;put(world,8,y,8,floor?org.mtr.mod.Blocks.LIFT_TRACK_FLOOR_1.get().data:org.mtr.mod.Blocks.LIFT_TRACK_VERTICAL_1.get().data);}
+        world.getWorldInfo().setGameType(WorldSettings.GameType.ADVENTURE);world.setSpawnLocation(8,TOP,6);simulator=actualSimulator();fixtureReady=true;sampleCore();
+    }
 
     @SubscribeEvent(priority=cpw.mods.fml.common.eventhandler.EventPriority.LOWEST,receiveCanceled=true) public void interaction(PlayerInteractEvent event){
         if(!prepared||!"MtrProbeA".equals(event.entityPlayer.getCommandSenderName()))return;
@@ -155,27 +182,28 @@ public final class DedicatedLiftProbe {
             require(runId.equals(text(root.resolve("server").resolve(worldName).resolve("mtr-mp-world-owner.txt")).trim()),"World owner changed");
             EntityPlayerMP player=null;for(Object candidate:world.playerEntities)if("MtrProbeA".equals(((EntityPlayerMP)candidate).getCommandSenderName()))player=(EntityPlayerMP)candidate;
             JsonObject ack=clientAck();if("FAILED".equals(string(ack,"phase")))throw new AssertionError("Client reported failure");
+            if(player!=null)serverPlayerUuid=player.getUniqueID().toString();if(ack!=null)clientSessionUuid=string(ack,"client_session_uuid");
             if(phase.equals("JOIN")){
+                if(!fixtureReady)prepareFixture(world,player);
+                if(ticks%10==0)sampleCore();
                 if(player==null||!bool(ack,"connected")){publish();return;}
-                world.getChunkFromChunkCoords(0,0);
-                require(world.getChunkProvider().chunkExists(0,0),"Owned fixture setup could not load its chunk");
-                world.getGameRules().setOrCreateGameRule("doMobSpawning","false");world.difficultySetting=net.minecraft.world.EnumDifficulty.PEACEFUL;
-                for(int x=0;x<16;x++)for(int z=4;z<16;z++){world.setBlock(x,71,z,net.minecraft.init.Blocks.stone,0,2);for(int y=72;y<=83;y++)world.setBlock(x,y,z,net.minecraft.init.Blocks.air,0,2);}
-                for(int y=72;y<=80;y++)put(world,8,y,8,y==72||y==80?org.mtr.mod.Blocks.LIFT_TRACK_FLOOR_1.get().data:org.mtr.mod.Blocks.LIFT_TRACK_VERTICAL_1.get().data);
-                player.setGameType(WorldSettings.GameType.CREATIVE);player.playerNetServerHandler.setPlayerLocation(8.5,72,6.5,0,0);player.inventory.currentItem=0;player.inventory.mainInventory[0]=new ItemStack(refresher());player.inventoryContainer.detectAndSendChanges();
-                simulator=actualSimulator();sampleCore();advance("REFRESH_0");return;
+                if(!playerPositioned){player.setGameType(WorldSettings.GameType.CREATIVE);player.playerNetServerHandler.setPlayerLocation(8.5,TOP,6.5,0,0);player.inventory.currentItem=0;player.inventory.mainInventory[0]=new ItemStack(refresher());player.inventoryContainer.detectAndSendChanges();playerPositioned=true;}
+                if(firstInterest==null){publish();return;}
+                require(firstInterest.get("y").getAsInt()>=TOP-1&&firstInterest.get("radius").getAsLong()==64,"Initial native data subscription was not centered at the high spawn with radius 64");
+                JsonObject current=coreSnapshot.getAsJsonObject("client_interest");if(current==null||current.get("y").getAsInt()<TOP-1){publish();return;}
+                advance("REFRESH_0");return;
             }
             if(phase.equals("COMPLETE")){
                 if(bool(ack,"complete")){JsonObject value=report();value.addProperty("complete",true);value.addProperty("refresher_pass",refreshResults.size()==2&&bool(refreshResults.get(0).getAsJsonObject(),"pass")&&bool(refreshResults.get(1).getAsJsonObject(),"pass"));value.addProperty("panel_effects_pass",panelResults.size()==4);write("targeted-server-report.json",value);finished=true;}return;
             }
             require(player!=null,"Client vanished before completion");if(ticks%10==0)sampleCore();
             if(phase.startsWith("REFRESH_")){
-                if(phaseTicks<100||!phase.equals(string(ack,"phase"))||number(ack,"click_sent")!=refreshIndex){publish();return;}
+                if(phaseTicks<200||!phase.equals(string(ack,"phase"))||number(ack,"click_sent")!=refreshIndex){publish();return;}
                 boolean ingress=false;for(JsonElement entry:interactions)if(phase.equals(string(entry.getAsJsonObject(),"phase"))&&"mtr:lift_refresher".equals(string(entry.getAsJsonObject(),"held_registry")))ingress=true;
-                JsonObject result=new JsonObject();result.addProperty("index",refreshIndex);result.addProperty("lift_count",liftCount.get());result.add("server_target",nativeBlock(world,8,refreshIndex==0?72:74,8));result.add("client",ack);result.addProperty("server_native_click_seen",ingress);result.addProperty("pass",ingress&&liftCount.get()>0&&bool(ack.getAsJsonObject("evidence"),"lift_screen_"+phase));refreshResults.add(result);
+                JsonObject result=new JsonObject();result.addProperty("index",refreshIndex);result.addProperty("lift_count",liftCount.get());result.add("core_snapshot",coreSnapshot);result.add("first_client_interest",firstInterest);result.add("server_target",nativeBlock(world,8,refreshIndex==0?TOP:VERTICAL_CLICK,8));result.add("client",ack);result.addProperty("server_native_click_seen",ingress);result.addProperty("pass",ingress&&liftCount.get()>0&&number(ack,"client_lift_count")>0&&bool(ack.getAsJsonObject("evidence"),"lift_screen_"+phase));refreshResults.add(result);
                 require(bool(result,"pass"),"A single native refresher click did not create the lift and open its original customization screen");
                 if(refreshIndex++==0){advance("REFRESH_1");return;}
-                for(int i=0;i<4;i++)put(world,2+4*i,72,12,panel(i));advance("PANELS_READY");return;
+                for(int i=0;i<4;i++)put(world,2+4*i,TOP,12,panel(i));advance("PANELS_READY");return;
             }
             if(phase.equals("PANELS_READY")){
                 if(!phase.equals(string(ack,"phase"))||!bool(ack,"panels_ready")||phaseTicks<30){publish();return;}
@@ -184,9 +212,9 @@ public final class DedicatedLiftProbe {
             if(phase.startsWith("DESTROY_")){
                 int index=Integer.parseInt(phase.substring(8)),x=2+4*index;
                 if(phaseTicks==1){
-                    BlockState old=state(world,x,72,12);require(old.getBlock().data==panel(index),"Wrong original panel target");JsonObject result=nativeBlock(world,x,72,12);result.addProperty("variant",PANEL_NAMES[index]);result.addProperty("event",2001);
-                    org.mtr.mapping.holder.World mapped=new org.mtr.mapping.holder.World(world);require(mapped.setBlockState(new BlockPos(x,72,12),org.mtr.mapping.holder.Blocks.getAirMapped().getDefaultState(),2),"Panel not removed");
-                    mapped.syncWorldEvent(null,2001,new BlockPos(x,72,12),org.mtr.mapping.holder.Block.getRawIdFromState(old));result.addProperty("event_sent_after_air",world.isAirBlock(x,72,12));panelResults.add(result);publish();return;
+                    BlockState old=state(world,x,TOP,12);require(old.getBlock().data==panel(index),"Wrong original panel target");JsonObject result=nativeBlock(world,x,TOP,12);result.addProperty("variant",PANEL_NAMES[index]);result.addProperty("event",2001);
+                    org.mtr.mapping.holder.World mapped=new org.mtr.mapping.holder.World(world);require(mapped.setBlockState(new BlockPos(x,TOP,12),org.mtr.mapping.holder.Blocks.getAirMapped().getDefaultState(),2),"Panel not removed");
+                    mapped.syncWorldEvent(null,2001,new BlockPos(x,TOP,12),org.mtr.mapping.holder.Block.getRawIdFromState(old));result.addProperty("event_sent_after_air",world.isAirBlock(x,TOP,12));panelResults.add(result);publish();return;
                 }
                 if(!phase.equals(string(ack,"phase"))||!bool(ack,"effect_survived")||phaseTicks<50){publish();return;}
                 panelResults.get(index).getAsJsonObject().add("client",ack);advance(index==3?"COMPLETE":"DESTROY_"+(index+1));return;
@@ -244,13 +272,18 @@ public final class DedicatedLiftProbe {
                 if(++menuTicks<40)return;
                 cpw.mods.fml.client.FMLClientHandler.instance().connectToServerAtStartup("127.0.0.1",25579);connecting=true;
             }
-            JsonObject ack=envelope();ack.addProperty("client_tick",clientTicks);boolean online=client.theWorld!=null&&client.thePlayer!=null&&client.getNetHandler()!=null&&client.getNetHandler().getNetworkManager().isChannelOpen();ack.addProperty("connected",online);
+            JsonObject ack=envelope();ack.addProperty("client_tick",clientTicks);ack.addProperty("client_session_uuid",client.getSession().getPlayerID());ack.addProperty("client_profile_uuid",client.getSession().func_148256_e().getId().toString());boolean online=client.theWorld!=null&&client.thePlayer!=null&&client.getNetHandler()!=null&&client.getNetHandler().getNetworkManager().isChannelOpen();ack.addProperty("connected",online);
             if(online){
+                org.mtr.mod.client.MinecraftClientData clientData=org.mtr.mod.client.MinecraftClientData.getInstance();JsonArray clientLiftIds=new JsonArray();clientData.lifts.forEach(lift->clientLiftIds.add(lift.getId()));
+                ack.addProperty("client_lift_count",clientData.lifts.size());ack.add("client_lift_ids",clientLiftIds);ack.addProperty("client_lift_wrapper_count",clientData.liftWrapperList.size());
+                JsonObject playerPosition=new JsonObject();playerPosition.addProperty("x",client.thePlayer.posX);playerPosition.addProperty("y",client.thePlayer.posY);playerPosition.addProperty("z",client.thePlayer.posZ);ack.add("player_position",playerPosition);
+                ack.addProperty("client_entity_uuid",client.thePlayer.getUniqueID().toString());
+                org.mtr.mapping.holder.BlockPos camera=org.mtr.mapping.holder.MinecraftClient.getInstance().getGameRendererMapped().getCamera().getBlockPos();JsonObject requestCenter=new JsonObject();requestCenter.addProperty("x",camera.getX());requestCenter.addProperty("y",camera.getY());requestCenter.addProperty("z",camera.getZ());requestCenter.addProperty("radius",org.mtr.mapping.mapper.MinecraftClientHelper.getRenderDistance()*16L);ack.add("native_request_center",requestCenter);
                 net.minecraft.network.NetworkManager manager=client.getNetHandler().getNetworkManager();require(manager.getSocketAddress() instanceof java.net.InetSocketAddress,"Expected TCP connection");java.net.InetSocketAddress address=(java.net.InetSocketAddress)manager.getSocketAddress();require(address.getAddress().isLoopbackAddress()&&address.getPort()==25579,"Foreign server endpoint");
                 if(observedManager!=manager){require(observedManager==null,"Unexpected reconnect");observedManager=manager;installObserver(manager);}ack.addProperty("observer_ready",observerReady);
                 if(client.currentScreen!=null){clientEvidence.addProperty("last_screen",client.currentScreen.getClass().getName());if(client.currentScreen.getClass().getName().contains("Lift")){clientEvidence.addProperty("lift_screen_received",true);clientEvidence.addProperty("lift_screen_"+phase,true);}client.displayGuiScreen(null);}
                 if(phase.startsWith("REFRESH_")){
-                    int index=Integer.parseInt(phase.substring(8)),y=index==0?72:74;Block expected=index==0?org.mtr.mod.Blocks.LIFT_TRACK_FLOOR_1.get().data:org.mtr.mod.Blocks.LIFT_TRACK_VERTICAL_1.get().data;
+                    int index=Integer.parseInt(phase.substring(8)),y=index==0?TOP:VERTICAL_CLICK;Block expected=index==0?org.mtr.mod.Blocks.LIFT_TRACK_FLOOR_1.get().data:org.mtr.mod.Blocks.LIFT_TRACK_VERTICAL_1.get().data;
                     ack.add("target",nativeBlock(client.theWorld,8,y,8));ItemStack held=client.thePlayer.getHeldItem();ack.addProperty("held_registry",held==null?"":Item.itemRegistry.getNameForObject(held.getItem()));
                     if(clickSent<index&&clientPhaseTicks>=25&&observerReady&&client.theWorld.getBlock(8,y,8)==expected&&held!=null&&held.getItem()==refresher()){
                         require(client.thePlayer.getDistanceSq(8.5,y+.5,8.5)<=Math.pow(client.playerController.getBlockReachDistance(),2),"Target outside native reach");
@@ -258,8 +291,8 @@ public final class DedicatedLiftProbe {
                     }
                     ack.addProperty("click_sent",clickSent);
                 }
-                if(phase.equals("PANELS_READY")){boolean ready=true;JsonArray values=new JsonArray();for(int i=0;i<4;i++){values.add(nativeBlock(client.theWorld,2+4*i,72,12));ready&=client.theWorld.getBlock(2+4*i,72,12)==panel(i);}ack.add("panels",values);ack.addProperty("panels_ready",ready&&observerReady);if(ready)screenshot(client);}
-                if(phase.startsWith("DESTROY_")){int index=Integer.parseInt(phase.substring(8));boolean survived=clientPhaseTicks>=40&&effects.get()>=index+1&&client.theWorld.isAirBlock(2+4*index,72,12);ack.addProperty("effect_survived",survived);ack.addProperty("surviving_ticks",clientPhaseTicks);if(survived)screenshot(client);}
+                if(phase.equals("PANELS_READY")){boolean ready=true;JsonArray values=new JsonArray();for(int i=0;i<4;i++){values.add(nativeBlock(client.theWorld,2+4*i,TOP,12));ready&=client.theWorld.getBlock(2+4*i,TOP,12)==panel(i);}ack.add("panels",values);ack.addProperty("panels_ready",ready&&observerReady);if(ready)screenshot(client);}
+                if(phase.startsWith("DESTROY_")){int index=Integer.parseInt(phase.substring(8));boolean survived=clientPhaseTicks>=40&&effects.get()>=index+1&&client.theWorld.isAirBlock(2+4*index,TOP,12);ack.addProperty("effect_survived",survived);ack.addProperty("surviving_ticks",clientPhaseTicks);if(survived)screenshot(client);}
             }
             synchronized(chats){ack.add("chats",chats);}synchronized(receivedEffects){ack.add("received_effects",receivedEffects);}ack.add("evidence",clientEvidence);ack.addProperty("effects_received",effects.get());ack.addProperty("screenshot",screenshotPhase.equals(phase));
             if(phase.equals("COMPLETE")){require(online&&effects.get()>=4,"Completion without real effect packets");screenshot(client);ack.addProperty("complete",true);write("targeted-a-report.json",ack);client.theWorld.sendQuittingDisconnectingPacket();client.loadWorld(null);client.displayGuiScreen(new net.minecraft.client.gui.GuiMainMenu());finished=true;client.shutdown();return;}
