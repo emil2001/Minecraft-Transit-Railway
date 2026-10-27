@@ -52,6 +52,7 @@ public class ItemLiftRefresher extends ItemExtension implements DirectionHelper 
 			blacklistedBlockPos.remove(blockPos);
 			final ObjectArrayList<LiftFloor> liftFloors2 = new ObjectArrayList<>();
 			findPath(world, blockPos, null, liftFloors2, new ObjectArrayList<>(), blacklistedBlockPos, false, false);
+			Init.LOGGER.info("Lift refresher scan at {}: {} connected floors", blockPos.toShortString(), liftFloors1.size() + liftFloors2.size());
 
 			if (liftFloors1.isEmpty() && liftFloors2.isEmpty()) {
 				return ActionResult.getFailMapped();

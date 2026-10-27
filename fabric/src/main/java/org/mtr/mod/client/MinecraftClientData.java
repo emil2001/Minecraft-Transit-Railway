@@ -15,6 +15,7 @@ import org.mtr.mod.block.BlockNode;
 import org.mtr.mod.data.PersistentVehicleData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.screen.DashboardListItem;
+import org.mtr.mod.packet.ClientPacketHelper;
 import org.mtr.mod.sound.LiftSound;
 
 import javax.annotation.Nullable;
@@ -36,6 +37,10 @@ public final class MinecraftClientData extends ClientData {
 	public final ObjectArrayList<DashboardListItem> railActions = new ObjectArrayList<>();
 
 	private final LongAVLTreeSet routeIdsWithDisabledAnnouncements = new LongAVLTreeSet();
+	private BlockPos pendingLiftScreen;
+	private Object pendingLiftScreenWorld;
+	private Object pendingLiftScreenParent;
+	private long pendingLiftScreenExpires;
 
 	private static MinecraftClientData instance = new MinecraftClientData();
 	private static MinecraftClientData dashboardInstance = new MinecraftClientData();
@@ -78,6 +83,45 @@ public final class MinecraftClientData extends ClientData {
 		}));
 
 		simplifiedRoutes.forEach(simplifiedRoute -> simplifiedRouteIdMap.put(simplifiedRoute.getId(), simplifiedRoute));
+		openPendingLiftScreen();
+	}
+
+	public void requestLiftCustomizationScreen(BlockPos blockPos) {
+		final MinecraftClient client = MinecraftClient.getInstance();
+		final ClientWorld world = client.getWorldMapped();
+		final Screen screen = client.getCurrentScreenMapped();
+		pendingLiftScreen = blockPos;
+		pendingLiftScreenWorld = world == null ? null : world.data;
+		pendingLiftScreenParent = screen == null ? null : screen.data;
+		pendingLiftScreenExpires = System.nanoTime() + 10_000_000_000L;
+		openPendingLiftScreen();
+	}
+
+	private void openPendingLiftScreen() {
+		if (pendingLiftScreen == null) {
+			return;
+		}
+		final MinecraftClient client = MinecraftClient.getInstance();
+		final ClientWorld world = client.getWorldMapped();
+		final Screen screen = client.getCurrentScreenMapped();
+		if (System.nanoTime() - pendingLiftScreenExpires >= 0 || world == null || world.data != pendingLiftScreenWorld || (screen == null ? null : screen.data) != pendingLiftScreenParent) {
+			clearPendingLiftScreen();
+			return;
+		}
+		// The open packet can arrive before the simulator's first canonical lift update.
+		for (final Lift lift : lifts) {
+			if (lift.getFloorIndex(Init.blockPosToPosition(pendingLiftScreen)) >= 0) {
+				clearPendingLiftScreen();
+				ClientPacketHelper.openKnownLiftCustomizationScreen(lift);
+				return;
+			}
+		}
+	}
+
+	private void clearPendingLiftScreen() {
+		pendingLiftScreen = null;
+		pendingLiftScreenWorld = null;
+		pendingLiftScreenParent = null;
 	}
 
 	@Nullable

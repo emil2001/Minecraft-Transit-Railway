@@ -4,7 +4,6 @@ import org.mtr.core.data.Lift;
 import org.mtr.core.data.TransportMode;
 import org.mtr.mapping.holder.*;
 import org.mtr.mapping.mapper.ScreenExtension;
-import org.mtr.mod.Init;
 import org.mtr.mod.block.*;
 import org.mtr.mod.client.MinecraftClientData;
 import org.mtr.mod.screen.*;
@@ -60,12 +59,11 @@ public final class ClientPacketHelper {
 	}
 
 	public static void openLiftCustomizationScreen(BlockPos blockPos) {
-		for (final Lift lift : MinecraftClientData.getInstance().lifts) {
-			if (lift.getFloorIndex(Init.blockPosToPosition(blockPos)) >= 0) {
-				MinecraftClient.getInstance().openScreen(new Screen(new LiftCustomizationScreen(lift)));
-				break;
-			}
-		}
+		MinecraftClientData.getInstance().requestLiftCustomizationScreen(blockPos);
+	}
+
+	public static void openKnownLiftCustomizationScreen(Lift lift) {
+		MinecraftClient.getInstance().openScreen(new Screen(new LiftCustomizationScreen(lift)));
 	}
 
 	public static void openPIDSConfigScreen(BlockPos blockPos, int maxArrivals) {
