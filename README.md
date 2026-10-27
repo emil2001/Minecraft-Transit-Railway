@@ -6,6 +6,8 @@ This fork builds on [Minecraft Transit Railway](https://github.com/Minecraft-Tra
 
 The port includes arrival, motor and door sounds for lifts. [LIFT_SOUNDS.md](LIFT_SOUNDS.md) explains the floor bell setting, resource-pack replacements and recording credits.
 
+`gtnh.5` fixes a client crash when breaking lift display panels. [Dedicated-server notes](DEDICATED_SERVER_FIXES.md) describe the checks and the unresolved remote Lift Refresher rejection.
+
 The Dashboard saves viewed terrain between sessions. [DASHBOARD_MAP_CACHE.md](DASHBOARD_MAP_CACHE.md) describes the cache, memory limits and offline verification. Native rendering of this change remains untested.
 
 ## Building

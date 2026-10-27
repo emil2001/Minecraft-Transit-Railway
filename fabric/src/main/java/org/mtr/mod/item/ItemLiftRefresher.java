@@ -43,6 +43,8 @@ public class ItemLiftRefresher extends ItemExtension implements DirectionHelper 
 
 			final ObjectArrayList<LiftFloor> liftFloors1 = new ObjectArrayList<>();
 			if (!findPath(world, blockPos, null, liftFloors1, new ObjectArrayList<>(), blacklistedBlockPos, true, false)) {
+				final Block target = world.getBlockState(blockPos).getBlock();
+				Init.LOGGER.warn("Lift refresher rejected target at {}: {} ({})", blockPos.toShortString(), target.getTranslationKey(), target.data.getClass().getName());
 				playerEntity.sendMessage(TranslationProvider.GUI_MTR_LIFT_TRACK_REQUIRED.getText(), true);
 				return ActionResult.getFailMapped();
 			}
