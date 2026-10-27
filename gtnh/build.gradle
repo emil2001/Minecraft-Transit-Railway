@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.mtr'
-version = '4.0.5-gtnh.2'
+version = '4.0.5-gtnh.3'
 
 repositories { mavenCentral() }
 
@@ -42,6 +42,9 @@ compileJava.dependsOn patchCoreLogging
 compileJava.options.release = 8
 
 compileTestJava.source file("src/game/java/org/mtr/gtnh/ClientWebserver.java")
+compileTestJava.source file("src/game/java/org/mtr/gtnh/DashboardMapStore.java")
+compileTestJava.source file("src/game/java/org/mtr/gtnh/DashboardMapCache.java")
+compileTestJava.source file("src/game/java/org/mtr/gtnh/DashboardMapView.java")
 
 dependencies {
     compileOnly files('../libs/Transport-Simulation-Core-0.0.1.jar')
