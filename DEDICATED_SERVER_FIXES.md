@@ -1,5 +1,7 @@
 # Dedicated-server lift fixes
 
+In gtnh.8, a stopped server update no longer opens the doors while the client is still smoothing the cabin's last movement to the floor. Opening starts from zero after that visual arrival, uses the normal opening rate, and retains its phase through repeated stopped updates. Server closing and departure remain authoritative. The Forge suite passed 335 tests, including both arrival-door regressions and the added addon API checks. The native YTE verification is tracked separately.
+
 In gtnh.7, the server binds transport-data subscriptions to the UUID of the player on the connection. On an offline-mode server, that UUID can differ from the account UUID stored in the client's launcher session. Earlier versions subscribed the account UUID, failed to find that player on the server, and removed the subscription. The client then received no lifts or vehicles; lift buttons also had no floor data to display. Position, update radius and all six existing-ID lists remain intact.
 
 The identity regression sends the real `PacketRequestData` through its server handler. It checks the UUID used by Core and compares the remaining serialized request fields. Native checks use a synthetic client-session UUID v4 and a different server-assigned UUID v3, with four connected floors at Y72, 112, 152 and 192. This reproduces the identity difference that the previous matching-UUID fixture missed.
@@ -24,7 +26,7 @@ Lift refresher rejected target at <x, y, z>: <translation key> (<native block cl
 
 These diagnostics distinguish a rejected target from floor discovery and screen delivery. Lift creation needs at least two connected Floor Tracks.
 
-Use the same `MTR-GTNH-4.0.5-gtnh.7.jar` on the client and server. Stop each process before replacing its old MTR JAR, and keep one MTR JAR in each `mods` directory. No recipe-script changes are needed.
+Use the same `MTR-GTNH-4.0.5-gtnh.8.jar` on the client and server. Stop each process before replacing its old MTR JAR, and keep one MTR JAR in each `mods` directory. No recipe-script changes are needed.
 
 A copied GTNH 2.9.0-RC-2 server and one copied client provide the native verification environment. The user's remote world and server configuration are unavailable locally.
 

@@ -6,7 +6,7 @@ This fork builds on [Minecraft Transit Railway](https://github.com/Minecraft-Tra
 
 The port includes arrival, motor and door sounds for lifts. [LIFT_SOUNDS.md](LIFT_SOUNDS.md) explains the floor bell setting, resource-pack replacements and recording credits.
 
-`gtnh.7` fixes missing lift and vehicle updates when client and offline-server UUIDs differ. It retains the customization-screen ordering fix and lift-panel crash fix. [Dedicated-server notes](DEDICATED_SERVER_FIXES.md) describe the checks and diagnostic logs.
+`gtnh.8` keeps lift doors closed until the rendered cabin finishes its arrival, then starts a smooth opening animation. It also extends the legacy API for the Yunzhu Transit Extension port. The offline UUID, customization-screen ordering and lift-panel crash fixes are retained. [Dedicated-server notes](DEDICATED_SERVER_FIXES.md) describe the checks and diagnostic logs.
 
 The Dashboard saves viewed terrain between sessions. [DASHBOARD_MAP_CACHE.md](DASHBOARD_MAP_CACHE.md) describes the cache, memory limits and offline verification. Native rendering of this change remains untested.
 
