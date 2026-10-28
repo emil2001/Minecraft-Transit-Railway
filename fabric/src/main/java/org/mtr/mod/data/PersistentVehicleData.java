@@ -52,10 +52,21 @@ public final class PersistentVehicleData {
 	 * @param totalVehicleLength the total length of this vehicle
 	 */
 	public void update(double newRailProgress, double totalVehicleLength) {
+		updateSnapshot(newRailProgress, totalVehicleLength);
+	}
+
+	public boolean updateSnapshot(double newRailProgress, double totalVehicleLength) {
 		railProgressSmoothingAdjustment = newRailProgress - smoothedRailProgress;
 		if (Math.abs(railProgressSmoothingAdjustment) > totalVehicleLength - 1) {
 			railProgressSmoothingAdjustment = 0;
+			return false;
 		}
+		return true;
+	}
+
+	public void updatePrediction(double predictedRailProgress, double frameAdvance, double totalVehicleLength, double stoppingPoint) {
+		final double visibleAdvance = Math.min(frameAdvance, stoppingPoint - smoothedRailProgress);
+		update(predictedRailProgress - visibleAdvance, totalVehicleLength);
 	}
 
 	public double getSmoothedRailProgress(double railProgress, double adjustmentAmount) {

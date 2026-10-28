@@ -36,8 +36,10 @@ import java.util.function.LongSupplier;
 public class VehicleExtension extends Vehicle implements Utilities {
 
 	private final LongSupplier millisSinceReceived;
+	private final boolean smoothFirstPrediction;
 	private boolean hasSimulated;
 	private double oldSpeed;
+	private double motorSpeedChange;
 	private int speedLimitKilometersPerHour;
 	@Nullable
 	private DoubleObjectImmutablePair<DoubleDoubleImmutablePair> platformStoppingDetails;
@@ -55,9 +57,10 @@ public class VehicleExtension extends Vehicle implements Utilities {
 		if (tempPersistentVehicleData == null) {
 			persistentVehicleData = new PersistentVehicleData(vehicleExtraData.immutableVehicleCars, getTransportMode());
 			MinecraftClientData.getInstance().vehicleIdToPersistentVehicleData.put(getId(), persistentVehicleData);
+			smoothFirstPrediction = false;
 		} else {
 			persistentVehicleData = tempPersistentVehicleData;
-			persistentVehicleData.update(railProgress, vehicleExtraData.getTotalVehicleLength());
+			smoothFirstPrediction = persistentVehicleData.updateSnapshot(railProgress, vehicleExtraData.getTotalVehicleLength());
 		}
 	}
 
@@ -69,6 +72,8 @@ public class VehicleExtension extends Vehicle implements Utilities {
 	}
 
 	public void simulate(long millisElapsed) {
+		final long frameMillisElapsed = millisElapsed;
+		final boolean firstPrediction = !hasSimulated;
 		if (!hasSimulated) {
 			// Predict only since this snapshot entered the client packet session.
 			hasSimulated = true;
@@ -79,6 +84,17 @@ public class VehicleExtension extends Vehicle implements Utilities {
 		simulate(millisElapsed, null, null);
 		if (vehicleExtraData.getSpeedTarget() < 0 || speed == 0) {
 			persistentVehicleData.approachStoppingPoint(oldRailProgress, railProgress, vehicleExtraData.getStoppingPoint());
+		}
+		if (firstPrediction && smoothFirstPrediction && speed > 0) {
+			// Receipt-age catch-up changes the snapshot origin, not this frame's visible travel time.
+			persistentVehicleData.updatePrediction(railProgress, speed * frameMillisElapsed, vehicleExtraData.getTotalVehicleLength(),
+					vehicleExtraData.getSpeedTarget() < 0 ? vehicleExtraData.getStoppingPoint() : Double.POSITIVE_INFINITY);
+		}
+		motorSpeedChange = speed - oldSpeed;
+		if (millisElapsed == 0 && speed > 0) {
+			// A zero-time render still has the current traction/brake command.
+			motorSpeedChange = vehicleExtraData.getSpeedTarget() < speed ? -vehicleExtraData.getDeceleration()
+					: vehicleExtraData.getSpeedTarget() > speed ? vehicleExtraData.getAcceleration() : 0;
 		}
 		persistentVehicleData.tick(railProgress, millisElapsed, vehicleExtraData);
 		final MinecraftClient minecraftClient = MinecraftClient.getInstance();
@@ -319,7 +335,7 @@ public class VehicleExtension extends Vehicle implements Utilities {
 	}
 
 	public void playMotorSound(VehicleResource vehicleResource, int carNumber, Vector bogiePosition) {
-		persistentVehicleData.playMotorSound(vehicleResource, carNumber, Init.newBlockPos(bogiePosition.x, bogiePosition.y, bogiePosition.z), (float) speed, (float) (speed - oldSpeed), (float) vehicleExtraData.getAcceleration(), getIsOnRoute());
+		persistentVehicleData.playMotorSound(vehicleResource, carNumber, Init.newBlockPos(bogiePosition.x, bogiePosition.y, bogiePosition.z), (float) speed, (float) motorSpeedChange, (float) vehicleExtraData.getAcceleration(), getIsOnRoute());
 	}
 
 	public void playDoorSound(VehicleResource vehicleResource, int carNumber, Vector vehiclePosition) {
