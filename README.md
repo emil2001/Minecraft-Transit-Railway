@@ -10,6 +10,8 @@ The port includes arrival, motor and door sounds for lifts. [LIFT_SOUNDS.md](LIF
 
 The Dashboard saves viewed terrain between sessions. [DASHBOARD_MAP_CACHE.md](DASHBOARD_MAP_CACHE.md) describes the cache, memory limits and offline verification. Native rendering of this change remains untested.
 
+`gtnh.13` preserves door-sound events across skipped render callbacks, dispatches queued samples once and chooses the nearest source by distance to the audio listener. [Door-sound notes](D78_DOOR_SOUND_GTNH_13.md) describe the regression tests and platform-observer checks.
+
 ## Building
 
 The port uses Java 21 and Gradle 8.14. Follow [BUILDING.md](BUILDING.md) to check out both repositories and supply the pinned external inputs. Retrieval of every dependency in a fresh environment remains untested.

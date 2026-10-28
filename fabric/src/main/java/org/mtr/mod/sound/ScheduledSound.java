@@ -24,7 +24,7 @@ public final class ScheduledSound {
 	private void play() {
 		final ClientWorld clientWorld = MinecraftClient.getInstance().getWorldMapped();
 		if (clientWorld != null) {
-			SCHEDULED_SOUNDS.values().forEach(scheduledSound -> clientWorld.playSoundAtBlockCenter(blockPos, soundEvent, SoundCategory.getBlocksMapped(), gain, pitch, false));
+			clientWorld.playSoundAtBlockCenter(blockPos, soundEvent, SoundCategory.getBlocksMapped(), gain, pitch, false);
 		}
 	}
 
@@ -33,11 +33,15 @@ public final class ScheduledSound {
 		if (soundEvent != null && clientPlayerEntity != null) {
 			final String currentKey = String.format("%s_%s_%s", soundEvent.getId().data.toString(), gain, pitch);
 			final ScheduledSound scheduledSound = SCHEDULED_SOUNDS.computeIfAbsent(currentKey, key -> new ScheduledSound(blockPos, soundEvent, gain, pitch));
-			final Vector3i clientPos = new Vector3i(clientPlayerEntity.getBlockPos().data);
-			if (blockPos.getManhattanDistance(clientPos) < scheduledSound.blockPos.getManhattanDistance(clientPos)) {
+			final Vector3d clientPos = clientPlayerEntity.getCameraPosVec(1);
+			if (squaredDistanceToCenter(blockPos, clientPos) < squaredDistanceToCenter(scheduledSound.blockPos, clientPos)) {
 				scheduledSound.blockPos = blockPos;
 			}
 		}
+	}
+
+	private static double squaredDistanceToCenter(BlockPos blockPos, Vector3d position) {
+		return new Vector3d(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5).squaredDistanceTo(position);
 	}
 
 	public static void playScheduledSounds() {

@@ -4,13 +4,40 @@ import org.mtr.mapping.holder.BlockPos;
 
 public abstract class VehicleSoundBase {
 
+	private boolean doorSoundInitialized;
+	private boolean pendingDoorOpenSound;
+	private boolean pendingDoorCloseSound;
+
 	public abstract void playMotorSound(BlockPos blockPos, float speed, float speedChange, float acceleration, boolean isOnRoute);
 
-	public final void playDoorSound(BlockPos blockPos, double doorValue, double oldDoorValue) {
+	/** Capture door transitions even when this car's render/audio callback is culled. */
+	public final void updateDoorSound(double doorValue, double oldDoorValue) {
+		if (doorValue == 0) {
+			pendingDoorOpenSound = false;
+		}
+		if (doorValue > oldDoorValue) {
+			pendingDoorCloseSound = false;
+		}
 		if (doorValue > 0 && oldDoorValue == 0) {
-			playDoorSound(blockPos, true);
+			pendingDoorOpenSound = true;
 		}
 		if (doorValue < getDoorCloseSoundTime() && oldDoorValue >= getDoorCloseSoundTime()) {
+			pendingDoorOpenSound = false;
+			pendingDoorCloseSound = true;
+		}
+		doorSoundInitialized = true;
+	}
+
+	public final void playDoorSound(BlockPos blockPos, double doorValue, double oldDoorValue) {
+		if (!doorSoundInitialized) {
+			updateDoorSound(doorValue, oldDoorValue);
+		}
+		if (pendingDoorOpenSound) {
+			pendingDoorOpenSound = false;
+			playDoorSound(blockPos, true);
+		}
+		if (pendingDoorCloseSound) {
+			pendingDoorCloseSound = false;
 			playDoorSound(blockPos, false);
 		}
 	}
