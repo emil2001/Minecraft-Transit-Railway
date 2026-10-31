@@ -12,6 +12,8 @@ The Dashboard saves viewed terrain between sessions. [DASHBOARD_MAP_CACHE.md](DA
 
 `gtnh.13` preserves door-sound events across skipped render callbacks, dispatches queued samples once and chooses the nearest source by distance to the audio listener. [Door-sound notes](D78_DOOR_SOUND_GTNH_13.md) describe the regression tests and platform-observer checks.
 
+`gtnh.15` releases tactile-map music when its source block is broken and lets a surviving nearby map take over the loop. [Tactile-map audio notes](TACTILE_MAP_AUDIO_GTNH_15.md) describe the lifecycle fix and checks.
+
 ## Building
 
 The port uses Java 21 and Gradle 8.14. Follow [BUILDING.md](BUILDING.md) to check out both repositories and supply the pinned external inputs. Retrieval of every dependency in a fresh environment remains untested.
