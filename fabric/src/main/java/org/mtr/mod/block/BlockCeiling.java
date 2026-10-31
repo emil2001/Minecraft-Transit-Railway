@@ -23,7 +23,7 @@ public class BlockCeiling extends BlockWaterloggable {
 	@Nonnull
 	@Override
 	public VoxelShape getOutlineShape2(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-		return Block.createCuboidShape(0, 7, 0, 16, 10, 16);
+		return Block.createCuboidShape(0, 13, 0, 16, 16, 16);
 	}
 
 	@Override

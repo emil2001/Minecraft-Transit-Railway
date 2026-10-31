@@ -7,6 +7,7 @@ public abstract class VehicleSoundBase {
 	private boolean doorSoundInitialized;
 	private boolean pendingDoorOpenSound;
 	private boolean pendingDoorCloseSound;
+	private boolean doorCloseSoundCaptured;
 
 	public abstract void playMotorSound(BlockPos blockPos, float speed, float speedChange, float acceleration, boolean isOnRoute);
 
@@ -17,13 +18,15 @@ public abstract class VehicleSoundBase {
 		}
 		if (doorValue > oldDoorValue) {
 			pendingDoorCloseSound = false;
+			doorCloseSoundCaptured = false;
 		}
 		if (doorValue > 0 && oldDoorValue == 0) {
 			pendingDoorOpenSound = true;
 		}
-		if (doorValue < getDoorCloseSoundTime() && oldDoorValue >= getDoorCloseSoundTime()) {
+		if (!doorCloseSoundCaptured && doorValue < oldDoorValue && doorValue < getDoorCloseSoundTime()) {
 			pendingDoorOpenSound = false;
 			pendingDoorCloseSound = true;
+			doorCloseSoundCaptured = true;
 		}
 		doorSoundInitialized = true;
 	}

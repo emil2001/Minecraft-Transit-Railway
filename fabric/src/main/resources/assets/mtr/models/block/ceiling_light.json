@@ -4,16 +4,16 @@
 	},
 	"elements": [
 		{   "__comment": "Light",
-			"from": [ 6.5, 9, 0 ],
-			"to": [ 9.5, 10, 16 ],
+			"from": [ 6.5, 15, 0 ],
+			"to": [ 9.5, 16, 16 ],
 			"shade": false,
 			"faces": {
 				"down": { "texture": "#light" },
 				"up": { "texture": "#light" },
-				"east": { "texture": "#light" },
-				"west": { "texture": "#light" },
-				"north": { "texture": "#light", "cullface": "north" },
-				"south": { "texture": "#light", "cullface": "south" }
+				"east": { "texture": "#light", "uv": [ 0, 6, 16, 7 ] },
+				"west": { "texture": "#light", "uv": [ 0, 6, 16, 7 ] },
+				"north": { "texture": "#light", "cullface": "north", "uv": [ 6.5, 6, 9.5, 7 ] },
+				"south": { "texture": "#light", "cullface": "south", "uv": [ 6.5, 6, 9.5, 7 ] }
 			}
 		}
 	]
