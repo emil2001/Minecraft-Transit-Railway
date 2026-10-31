@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.mtr'
-version = '4.0.5-gtnh.16'
+version = '4.0.5-gtnh.17'
 
 repositories { mavenCentral() }
 
