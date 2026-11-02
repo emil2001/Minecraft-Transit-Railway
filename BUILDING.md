@@ -69,7 +69,7 @@ cd mtr
   "-PmtrAngelica=$MTR_ANGELICA"
 ```
 
-`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.3.jar`, relative to the shared checkout directory.
+`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.18.jar`, relative to the shared checkout directory.
 
 Run the Mappings backend tests separately, using the same path variables:
 
@@ -85,4 +85,4 @@ The backend passes the properties to its nested Core preparation task. Its test 
 
 The wrappers, plugins and Maven dependencies use online repositories, including the GTNH Nexus public repository, Maven Central and Mojang's library repository. A sibling `local-maven` directory can serve as a fallback cache for the configured plugin. An offline build requires a separately populated cache; no fresh offline checkout build is claimed.
 
-The current build passed 322 backend tests and 38 Core/cache tests in the development copies. The ordinary JAR contains no test probes. Dashboard terrain persistence was checked offline; Minecraft was not launched for this change. Retrieval of every external input on a clean machine remains untested.
+The gtnh.18 release checks recorded 381 backend tests with no failures or errors and one optional addon-resource skip. All eight France mapping tests passed with addon resources present. The dedicated-server ticket regression exercised actual ticket accounting with a FakePlayer; a connected-player barrier walkthrough was outside that check. The ordinary JAR contains no test probes. Retrieval of every external input on a clean machine remains untested.

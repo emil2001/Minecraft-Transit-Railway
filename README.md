@@ -6,6 +6,8 @@ This fork builds on [Minecraft Transit Railway](https://github.com/Minecraft-Tra
 
 The port includes arrival, motor and door sounds for lifts. [LIFT_SOUNDS.md](LIFT_SOUNDS.md) explains the floor bell setting, resource-pack replacements and recording credits.
 
+The current build is `4.0.5-gtnh.18`. It fixes the ticket-barrier crash on dedicated servers and supports the separate [MTR France Addon port](https://github.com/emil2001/MTR-France-Addon/tree/gtnh/1.2.0-port). Rail disappearance at the reported junction remains unresolved; a separate [diagnostic tool](gtnh/tools/rail-trace/README.md) can record the affected section.
+
 `gtnh.8` keeps lift doors closed until the rendered cabin finishes its arrival, then starts a smooth opening animation. It also extends the legacy API for the Yunzhu Transit Extension port. The offline UUID, customization-screen ordering and lift-panel crash fixes are retained. [Dedicated-server notes](DEDICATED_SERVER_FIXES.md) describe the checks and diagnostic logs.
 
 The Dashboard saves viewed terrain between sessions. [DASHBOARD_MAP_CACHE.md](DASHBOARD_MAP_CACHE.md) describes the cache, memory limits and offline verification. Native rendering of this change remains untested.
