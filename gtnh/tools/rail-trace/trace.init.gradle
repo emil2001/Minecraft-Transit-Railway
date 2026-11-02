@@ -1,0 +1,32 @@
+allprojects { project ->
+    afterEvaluate {
+        if (!project.plugins.hasPlugin('com.gtnewhorizons.retrofuturagradle')) return
+        def probeRoot = file(providers.gradleProperty('railTraceRoot').get())
+        def mtrDev = file(providers.gradleProperty('railMtrDev').get())
+        if (!mtrDev.isFile()) throw new GradleException("Missing MTR development JAR: ${mtrDev}")
+        sourceSets.create('railTrace') {
+            java.srcDir new File(probeRoot, 'src')
+            compileClasspath += files(mtrDev) + sourceSets.main.output + sourceSets.main.compileClasspath
+            runtimeClasspath = output + compileClasspath
+        }
+        tasks.named('compileRailTraceJava') {
+            options.release = 8
+            options.incremental = false
+            options.compilerArgs += ['-proc:none']
+        }
+        tasks.register('railTraceJar', Jar) {
+            from sourceSets.railTrace.output
+            archiveBaseName = 'MTR-Rail-Trace'
+            archiveVersion = '0.1'
+            archiveClassifier = 'dev'
+            destinationDirectory = new File(probeRoot, 'build')
+        }
+        tasks.named('reobfRailTraceJar') {
+            referenceClasspath.from(sourceSets.railTrace.compileClasspath)
+            archiveBaseName = 'MTR-Rail-Trace'
+            archiveVersion = '0.1'
+            archiveClassifier = ''
+            destinationDirectory = new File(probeRoot, 'build')
+        }
+    }
+}
