@@ -2,10 +2,8 @@ package org.mtr.gtnh;
 
 import org.mtr.core.data.*;
 import org.mtr.core.operation.VehicleLiftResponse;
-import org.mtr.core.operation.VehicleUpdate;
 import org.mtr.core.simulation.Simulator;
 import org.mtr.core.tool.Utilities;
-import org.mtr.core.tool.Vector;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -86,15 +84,16 @@ final class CoreRidingSnapshots {
                 for (Object value : (Collection<?>) SIDING_VEHICLES.get(siding)) {
                     Vehicle vehicle = (Vehicle) value;
                     if (!vehicleIds.contains(vehicle.getId())) continue;
+                    CoreRidingVehicle pose;
+                    try { pose = CoreRidingVehicle.capture(vehicle); }
+                    catch (RuntimeException invalid) { continue; } // Omission revokes only this vehicle's old cabin.
                     long[] low = {Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE}, high = {Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE};
-                    vehicle.getVehicleCarsAndPositions().forEach(car -> car.right().forEach(pair -> {
-                        Vector first = pair.left(), second = pair.right();
-                        include(low, high, first.x, first.y, first.z); include(low, high, second.x, second.y, second.z);
-                    }));
-                    boolean[] riding = {false};
-                    vehicle.vehicleExtraData.iterateRidingEntities(rider -> { if (uuid.equals(rider.uuid)) riding[0] = true; });
-                    if (within(client, low, high) || riding[0])
-                        vehicles.put(vehicle.getId(), Utilities.getJsonObjectFromData(new VehicleUpdate(vehicle, vehicle.vehicleExtraData)).toString());
+                    for (CoreRidingVehicle.Car car : pose.cars) for (CoreRidingVehicle.Bogie bogie : car.bogies) {
+                        include(low, high, bogie.x1, bogie.y1, bogie.z1);
+                        include(low, high, bogie.x2, bogie.y2, bogie.z2);
+                    }
+                    if (within(client, low, high) || pose.hasRider(uuid))
+                        vehicles.put(vehicle.getId(), pose.toJson());
                 }
             }
             return new Result(lifts, vehicles);

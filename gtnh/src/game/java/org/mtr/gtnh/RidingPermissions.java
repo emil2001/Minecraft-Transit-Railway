@@ -105,7 +105,7 @@ public final class RidingPermissions {
                 catch (RuntimeException invalid) { /* Invalid current data removes the old cabin. */ }
             });
             pending.result.vehicles.forEach((id, json) -> {
-                try { vehicles.put(id, vehicle(new VehicleUpdate(new JsonReader(Utilities.parseJson(json))), pending.requestedAt, view.vehicles.get(id))); }
+                try { vehicles.put(id, vehicle(CoreRidingVehicle.parse(json), pending.requestedAt, view.vehicles.get(id))); }
                 catch (RuntimeException invalid) { /* Invalid current data removes the old cabin. */ }
             });
             view.vehicles.clear(); view.vehicles.putAll(vehicles); view.lifts.clear(); view.lifts.putAll(lifts);
@@ -589,36 +589,32 @@ public final class RidingPermissions {
                 && old.cabins[0].frame.yaw == frame.yaw && old.cabins[0].frame.pitch == frame.pitch) return old;
         return new Snapshot(0, 0, now, now, new Cabin[]{cabin}, retainPrevious ? old.freshAt : now);
     }
-    private static Snapshot vehicle(VehicleUpdate update, long now, Snapshot old) {
-        Data data = new Data() {};
-        VehicleExtraData extra = new VehicleExtraData(new JsonReader(Utilities.getJsonObjectFromData(update.getVehicleExtraData())));
-        PathData.writePathCache(extra.immutablePath, data, update.getVehicle().getTransportMode());
-        Vehicle copy = new Vehicle(extra, null, new JsonReader(Utilities.getJsonObjectFromData(update.getVehicle())), data);
+    private static Snapshot vehicle(CoreRidingVehicle update, long now, Snapshot old) {
         List<Cabin> cabins = new ArrayList<>();
-        copy.getVehicleCarsAndPositions().forEach(car -> {
+        for (CoreRidingVehicle.Car car : update.cars) {
             List<Frame> bogies = new ArrayList<>();
-            car.right().forEach(pair -> bogies.add(frame(pair.left(), pair.right(), true)));
+            for (CoreRidingVehicle.Bogie bogie : car.bogies)
+                bogies.add(frame(new Vector(bogie.x1, bogie.y1, bogie.z1), new Vector(bogie.x2, bogie.y2, bogie.z2), true));
             if (bogies.size() != 1 && bogies.size() != 2) throw new IllegalArgumentException("Invalid bogie count");
-            boolean pitch = copy.getTransportMode().hasPitchAscending || copy.getTransportMode().hasPitchDescending;
+            boolean pitch = update.mode.hasPitchAscending || update.mode.hasPitchDescending;
             Frame orientation = bogies.size() == 1 ? new Frame(bogies.get(0).position, bogies.get(0).yaw, pitch ? bogies.get(0).pitch : 0)
                 : frame(bogies.get(0).position, bogies.get(1).position, pitch);
-            double pivot = (car.left().getBogie1Position() + car.left().getBogie2Position()) / 2;
-            Vector center = orientation.world(0, 0, -pivot);
+            Vector center = orientation.world(0, 0, -car.pivot);
             Frame frame = new Frame(center, orientation.yaw, orientation.pitch);
-            List<AxisAlignedBB> doorways = doorways(copy.getTransportMode(), car.left().getVehicleId());
-            boolean holdAllowed = copy.getTransportMode().continuousMovement || !copy.isMoving();
-            boolean previousHoldAllowed = old != null && old.siding == extra.getSidingId() && cabins.size() < old.cabins.length && old.cabins[cabins.size()].doorways == doorways && old.cabins[cabins.size()].holdAllowed;
-            cabins.add(new Cabin(frame, car.left().getWidth(), car.left().getLength(), TRAIN_HEIGHT, floorOffset(copy.getTransportMode(), car.left().getVehicleId()), previous(old, cabins.size(), frame, now), doorways, holdAllowed, previousHoldAllowed, old == null ? now : old.freshAt));
-        });
+            List<AxisAlignedBB> doorways = doorways(update.mode, car.vehicleId);
+            boolean holdAllowed = update.mode.continuousMovement || !update.moving;
+            boolean previousHoldAllowed = old != null && old.siding == update.siding && cabins.size() < old.cabins.length && old.cabins[cabins.size()].doorways == doorways && old.cabins[cabins.size()].holdAllowed;
+            cabins.add(new Cabin(frame, car.width, car.length, TRAIN_HEIGHT, floorOffset(update.mode, car.vehicleId), previous(old, cabins.size(), frame, now), doorways, holdAllowed, previousHoldAllowed, old == null ? now : old.freshAt));
+        }
         if (cabins.isEmpty()) throw new IllegalArgumentException("No authoritative vehicle cars");
-        boolean retainPrevious = old != null && old.siding == extra.getSidingId() && old.cabins.length == cabins.size();
+        boolean retainPrevious = old != null && old.siding == update.siding && old.cabins.length == cabins.size();
         for (int index = 0; retainPrevious && index < cabins.size(); index++) retainPrevious = Selection.continuous(old.cabins[index], cabins.get(index));
         Map<UUID, CoreSeat> riders = new HashMap<>();
-        extra.iterateRidingEntities(rider -> {
-            CoreSeat seat = new CoreSeat(rider.getRidingCar(), rider.getIsOnGangway());
+        for (CoreRidingVehicle.Seat rider : update.riders) {
+            CoreSeat seat = new CoreSeat(rider.car, rider.gangway);
             riders.put(rider.uuid, riders.containsKey(rider.uuid) ? CoreSeat.AMBIGUOUS : seat);
-        });
-        return new Snapshot(extra.getSidingId(), extra.getDepotId(), now, now, cabins.toArray(new Cabin[0]), retainPrevious ? old.freshAt : now, riders);
+        }
+        return new Snapshot(update.siding, update.depot, now, now, cabins.toArray(new Cabin[0]), retainPrevious ? old.freshAt : now, riders);
     }
     private static Frame previous(Snapshot old, int index, Frame current, long now) {
         if (old == null || index >= old.cabins.length || !old.fresh(now) || now - old.freshAt > SWEEP_TICKS) return null;

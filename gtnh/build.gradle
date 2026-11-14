@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.mtr'
-version = '4.0.5-gtnh.18'
+version = '4.0.5-gtnh.20'
 
 repositories { mavenCentral() }
 
@@ -45,6 +45,8 @@ compileTestJava.source file("src/game/java/org/mtr/gtnh/ClientWebserver.java")
 compileTestJava.source file("src/game/java/org/mtr/gtnh/DashboardMapStore.java")
 compileTestJava.source file("src/game/java/org/mtr/gtnh/DashboardMapCache.java")
 compileTestJava.source file("src/game/java/org/mtr/gtnh/DashboardMapView.java")
+compileTestJava.source file("src/game/java/org/mtr/gtnh/CoreRidingSnapshots.java")
+compileTestJava.source file("src/game/java/org/mtr/gtnh/CoreRidingVehicle.java")
 
 dependencies {
     compileOnly files('../libs/Transport-Simulation-Core-0.0.1.jar')
@@ -61,6 +63,15 @@ test {
     dependsOn patchCoreLogging
     useJUnitPlatform()
     testLogging { events 'passed', 'failed', 'skipped' }
+}
+
+tasks.register('benchmarkRidingSnapshots', JavaExec) {
+    description = 'Measures the old path reconstruction and detached vehicle poses; does not measure whole-server MSPT.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.mtr.gtnh.CoreRidingVehicleBenchmark'
+    maxHeapSize = '1g'
+    args '10', '30', '7'
 }
 
 tasks.register('productionBuild', GradleBuild) {

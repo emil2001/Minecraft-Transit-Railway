@@ -1,6 +1,8 @@
 # Building the GTNH port
 
-Use JDK 21 and the included Gradle 8.14 wrappers. The production build needs both source repositories and external dependency files. The commands below follow the configured Gradle tasks; fetching every external input in a fresh environment remains untested.
+Use JDK 21 to run the included Gradle 8.14 wrappers. RetrofuturaGradle also needs an installed JDK 8 to compile its Minecraft launcher and patched Minecraft sources. The mod itself targets Java 8 bytecode. Both source repositories and the external inputs below are required.
+
+If Gradle does not discover both JDKs, set `org.gradle.java.installations.paths=/path/to/jdk8,/path/to/jdk21` in your Gradle user properties, or pass that property with `-P`. Run Gradle with `JAVA_HOME` pointing to JDK 21.
 
 ## Check out both repositories
 
@@ -49,7 +51,7 @@ The official Minecraft 1.20.4 version metadata lists their Mojang library downlo
 
 The required input is `com.logisticscraft:occlusionculling:0.0.9-SNAPSHOT`. Its byte identity is pinned in the companion [`occlusionculling.json`](https://github.com/emil2001/Minecraft-Mappings/blob/gtnh-1.7.10/forge/1.7.10-mapping/src/main/resources/META-INF/mtr/occlusionculling.json). The production task verifies the SHA-256 and expected class count.
 
-Upstream uses the [CodeMC Maven repository](https://repo.codemc.org/repository/maven-public) for this dependency. The validated input was recovered from an upstream Gradle cache. Availability of those exact snapshot bytes from CodeMC has not been verified. A different build of the same snapshot version will fail the hash check; obtain the pinned file before attempting the production build.
+Upstream uses the [CodeMC Maven repository](https://repo.codemc.org/repository/maven-public) for this dependency. The pinned bytes are available from CodeMC as `0.0.9-20261016.150747-1`, under the `com/logisticscraft/occlusionculling/0.0.9-SNAPSHOT/` Maven path. Save `occlusionculling-0.0.9-20261016.150747-1.jar` as `occlusionculling-0.0.9-SNAPSHOT.jar`. Its SHA-256 must be `2d9677ef86c768c2cc3c01f117909d7734538ffa29372ff352a22ce9cb10335d`. A different build of the same snapshot version fails the hash check.
 
 The MTR checkout also contains upstream dependency JARs in `libs/`, including Transport Simulation Core and the Shadow libraries. Keep those files in place. The source licenses and open attribution issues are described in [THIRD_PARTY.md](THIRD_PARTY.md).
 
@@ -69,7 +71,9 @@ cd mtr
   "-PmtrAngelica=$MTR_ANGELICA"
 ```
 
-`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.18.jar`, relative to the shared checkout directory.
+`productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. Core preparation also freezes outbound vehicle/lift updates before publication and makes the save-request flag visible between threads. These hooks are checked against the pinned Core method signatures; an incompatible Core fails the build.
+
+The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.20.jar`, relative to the shared checkout directory.
 
 Run the Mappings backend tests separately, using the same path variables:
 
@@ -85,4 +89,4 @@ The backend passes the properties to its nested Core preparation task. Its test 
 
 The wrappers, plugins and Maven dependencies use online repositories, including the GTNH Nexus public repository, Maven Central and Mojang's library repository. A sibling `local-maven` directory can serve as a fallback cache for the configured plugin. An offline build requires a separately populated cache; no fresh offline checkout build is claimed.
 
-The gtnh.18 release checks recorded 381 backend tests with no failures or errors and one optional addon-resource skip. All eight France mapping tests passed with addon resources present. The dedicated-server ticket regression exercised actual ticket accounting with a FakePlayer; a connected-player barrier walkthrough was outside that check. The ordinary JAR contains no test probes. Retrieval of every external input on a clean machine remains untested.
+The gtnh.20 source build passed 59 Core tests and 388 backend tests with no failures or errors and one optional addon-resource skip. The Core tests include real manual/threaded schedulers in two dimensions, detached S2C/callback payloads and shared HTTP cache concurrency. The backend tests cover numeric cabin acceptance, expired reads, world/source changes and existing passenger/key authorization checks. All eight France mapping tests passed with addon resources present. The dedicated-server ticket regression exercised actual ticket accounting with a FakePlayer; a connected-player barrier walkthrough was outside that check. The ordinary JAR contains no test probes. The external inputs above were retrieved and the production task completed in the recovered build environment. A connected-player check on the target GTNH pack remains outstanding.

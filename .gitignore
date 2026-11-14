@@ -5,6 +5,10 @@ build/
 out/
 classes/
 
+# The build-tool package is source, not a Gradle output directory.
+!/gtnh/src/buildTools/java/org/mtr/gtnh/build/
+!/gtnh/src/buildTools/java/org/mtr/gtnh/build/PatchCoreLogging.java
+
 # eclipse
 
 *.launch

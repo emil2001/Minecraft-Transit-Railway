@@ -70,6 +70,8 @@ public final class Init implements Utilities {
 	private static final Object2ObjectArrayMap<ServerWorld, RailActionModule> RAIL_ACTION_MODULES = new Object2ObjectArrayMap<>();
 	private static final ObjectArrayList<String> WORLD_ID_LIST = new ObjectArrayList<>();
 	private static final Object2ObjectAVLTreeMap<UUID, ServerPlayerEntity> RIDING_PLAYERS = new Object2ObjectAVLTreeMap<>();
+	// Core and its webserver resolve names without reading Minecraft's player list off-thread.
+	private static final java.util.concurrent.ConcurrentMap<UUID, String> CLIENT_NAMES = new java.util.concurrent.ConcurrentHashMap<>();
 
 	public static void init() {
 		LOGGER.info("Starting Minecraft with arguments:\n{}", String.join("\n", ManagementFactory.getRuntimeMXBean().getInputArguments()));
@@ -178,6 +180,8 @@ public final class Init implements Utilities {
 			});
 
 			Config.init(minecraftServer.getRunDirectory());
+			CLIENT_NAMES.clear();
+			Main.CLIENT_NAME_RESOLVER = uuid -> CLIENT_NAMES.getOrDefault(uuid, "");
 			final int defaultPort = Config.getServer().getWebserverPort();
 			serverPort = defaultPort <= 0 ? -1 : findFreePort(defaultPort);
 			main = new Main(minecraftServer.getSavePath(WorldSavePath.getRootMapped()).resolve("mtr"), serverPort, Config.getServer().getUseThreadedSimulation(), Config.getServer().getUseThreadedFileLoading(), webserverSetup, WORLD_ID_LIST.toArray(new String[0]));
@@ -211,10 +215,6 @@ public final class Init implements Utilities {
 				StrayThreadManager.register(minecraftServer);
 			}
 
-			Main.CLIENT_NAME_RESOLVER = uuid -> {
-				final ServerPlayerEntity serverPlayerEntity = minecraftServer.getPlayerManager().getPlayer(uuid);
-				return serverPlayerEntity == null ? "" : serverPlayerEntity.getName().getString();
-			};
 		});
 
 		REGISTRY.eventRegistry.registerServerStopping(minecraftServer -> {
@@ -222,6 +222,7 @@ public final class Init implements Utilities {
 				main.stop();
 			}
 			serverPort = 0;
+			CLIENT_NAMES.clear();
 			org.mtr.gtnh.RidingPermissions.clear();
 			RIDING_PLAYERS.clear();
 		});
@@ -268,10 +269,12 @@ public final class Init implements Utilities {
 		});
 
 		REGISTRY.eventRegistry.registerPlayerJoin((minecraftServer, serverPlayerEntity) -> {
+			CLIENT_NAMES.put(serverPlayerEntity.getUuid(), serverPlayerEntity.getName().getString());
 			org.mtr.gtnh.RidingPermissions.disconnect(serverPlayerEntity);
 			updatePlayer(serverPlayerEntity, false);
 		});
 		REGISTRY.eventRegistry.registerPlayerDisconnect((minecraftServer, serverPlayerEntity) -> {
+			CLIENT_NAMES.remove(serverPlayerEntity.getUuid());
 			RIDING_PLAYERS.remove(serverPlayerEntity.getUuid());
 			org.mtr.gtnh.RidingPermissions.disconnect(serverPlayerEntity);
 		});
@@ -298,7 +301,10 @@ public final class Init implements Utilities {
 
 	public static <T extends SerializedDataBase> void sendMessageC2S(String key, @Nullable MinecraftServer minecraftServer, @Nullable World world, SerializedDataBase data, @Nullable Consumer<T> consumer, @Nullable Class<T> responseDataClass) {
 		if (main != null) {
-			main.sendMessageC2S(world == null ? null : WORLD_ID_LIST.indexOf(getWorldId(world)), new QueueObject(key, data, consumer == null || minecraftServer == null ? null : responseData -> minecraftServer.execute(() -> consumer.accept(responseData)), responseDataClass));
+			main.sendMessageC2S(world == null ? null : WORLD_ID_LIST.indexOf(getWorldId(world)), new QueueObject(key, data, consumer == null || minecraftServer == null ? null : responseData -> {
+				final T snapshot = org.mtr.gtnh.CoreThreadHandoff.reply(responseData, responseDataClass);
+				minecraftServer.execute(() -> consumer.accept(snapshot));
+			}, responseDataClass));
 		}
 	}
 
