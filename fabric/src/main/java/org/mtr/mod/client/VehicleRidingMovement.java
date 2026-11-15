@@ -118,6 +118,7 @@ public class VehicleRidingMovement {
 		if (ridingVehicleId == 0 || isRiding(vehicleId)) {
 			for (final Box floorOrDoorway : openFloorsAndDoorways) {
 				if (RenderVehicleHelper.boxContains(floorOrDoorway, x, y, z)) {
+					final boolean startingRide = ridingVehicleId == 0;
 					if (ridingVehicleId != vehicleId || ridingVehicleCarNumber != carNumber) {
 						waitingForGeometry = false;
 					}
@@ -133,7 +134,7 @@ public class VehicleRidingMovement {
 					ridingPositionCache = null;
 					ridingYawDifference = null;
 					previousVehicleYaw = yaw;
-					if (ridingVehicleId == 0) {
+					if (startingRide) {
 						sendUpdate(false);
 					}
 				}

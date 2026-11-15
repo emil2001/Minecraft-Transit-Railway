@@ -11,8 +11,8 @@ Keep the directory names `mtr` and `mappings` as siblings. The build uses those 
 ```sh
 mkdir mtr-gtnh
 cd mtr-gtnh
-git clone --branch gtnh-1.7.10 https://github.com/emil2001/Minecraft-Transit-Railway.git mtr
-git clone --branch gtnh-1.7.10 https://github.com/emil2001/Minecraft-Mappings.git mappings
+git clone --branch fix/boarding-first-packet https://github.com/emil2001/Minecraft-Transit-Railway.git mtr
+git clone --branch fix/boarding-first-packet https://github.com/emil2001/Minecraft-Mappings.git mappings
 ```
 
 ## Supply the external inputs
@@ -73,7 +73,7 @@ cd mtr
 
 `productionBuild` prepares the Core compatibility output and delegates to the Mappings backend's `reobfPortJar` task. It passes the properties to that nested build. Core preparation also freezes outbound vehicle/lift updates before publication and makes the save-request flag visible between threads. These hooks are checked against the pinned Core method signatures; an incompatible Core fails the build.
 
-The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.20.jar`, relative to the shared checkout directory.
+The production mod is written to `mtr/gtnh/build/libs/MTR-GTNH-4.0.5-gtnh.21.jar`, relative to the shared checkout directory.
 
 Run the Mappings backend tests separately, using the same path variables:
 
@@ -89,4 +89,4 @@ The backend passes the properties to its nested Core preparation task. Its test 
 
 The wrappers, plugins and Maven dependencies use online repositories, including the GTNH Nexus public repository, Maven Central and Mojang's library repository. A sibling `local-maven` directory can serve as a fallback cache for the configured plugin. An offline build requires a separately populated cache; no fresh offline checkout build is claimed.
 
-The gtnh.20 source build passed 59 Core tests and 388 backend tests with no failures or errors and one optional addon-resource skip. The Core tests include real manual/threaded schedulers in two dimensions, detached S2C/callback payloads and shared HTTP cache concurrency. The backend tests cover numeric cabin acceptance, expired reads, world/source changes and existing passenger/key authorization checks. All eight France mapping tests passed with addon resources present. The dedicated-server ticket regression exercised actual ticket accounting with a FakePlayer; a connected-player barrier walkthrough was outside that check. The ordinary JAR contains no test probes. The external inputs above were retrieved and the production task completed in the recovered build environment. A connected-player check on the target GTNH pack remains outstanding.
+The gtnh.20 source build passed 59 Core tests and 388 backend tests with no failures or errors and one optional addon-resource skip. The Core tests include real manual/threaded schedulers in two dimensions, detached S2C/callback payloads and shared HTTP cache concurrency. The backend tests cover numeric cabin acceptance, expired reads, world/source changes and existing passenger/key authorization checks. All eight France mapping tests passed with addon resources present. The dedicated-server ticket regression exercised actual ticket accounting with a FakePlayer; a connected-player barrier walkthrough was outside that check. The ordinary JAR contains no test probes. The external inputs above were retrieved and the production task completed in the recovered build environment. The gtnh.21 follow-up passed 59 Core tests and 391 backend tests, with the same optional skip. Its three new regressions check the first passenger packet and repeated or overlapping doorway frames. A connected-player test on a copied GTNH 2.9.0 dedicated server confirmed same-frame initial sending and server authorization within 90 ms on an existing lift. Other intermittent boarding failures remain unconfirmed.
