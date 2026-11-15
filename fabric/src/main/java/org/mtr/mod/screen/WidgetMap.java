@@ -89,14 +89,18 @@ public class WidgetMap extends ClickableWidgetExtension implements IGui {
 
 		// World map
 		if (world != null) {
+			final DoubleDoubleImmutablePair preciseTopLeft = coordsToWorldPos(0D, 0D);
+			final DoubleDoubleImmutablePair preciseBottomRight = coordsToWorldPos((double) width, (double) height);
+			worldMap.setViewBounds(preciseTopLeft.leftDouble(), preciseTopLeft.rightDouble(),
+				preciseBottomRight.leftDouble(), preciseBottomRight.rightDouble());
 			worldMap.tick(World.cast(world), player, delta);
 			worldMap.forEachTile(mapImage -> {
 				final int posX = mapImage.chunkX * WorldMap.CHUNK_SIZE;
 				final int posZ = mapImage.chunkZ * WorldMap.CHUNK_SIZE;
-				if (posX + WorldMap.CHUNK_SIZE < topLeft.leftInt() || posZ + WorldMap.CHUNK_SIZE < (topLeft).rightInt() || posX > bottomRight.leftInt() || posZ > bottomRight.rightInt()) {
+				if (posX + WorldMap.MAP_SIZE < topLeft.leftInt() || posZ + WorldMap.MAP_SIZE < (topLeft).rightInt() || posX > bottomRight.leftInt() || posZ > bottomRight.rightInt()) {
 					return;
 				}
-				drawTextureFromWorldCoords(guiDrawing, mapImage.textureId, posX, posZ, posX + WorldMap.CHUNK_SIZE, posZ + WorldMap.CHUNK_SIZE);
+				drawTextureFromWorldCoords(guiDrawing, mapImage.textureId, posX, posZ, posX + WorldMap.MAP_SIZE, posZ + WorldMap.MAP_SIZE);
 			});
 		}
 
@@ -367,13 +371,15 @@ public class WidgetMap extends ClickableWidgetExtension implements IGui {
 	}
 
 	private void drawTextureFromWorldCoords(GuiDrawing guiDrawing, Identifier texture, double posX1, double posZ1, double posX2, double posZ2) {
-		guiDrawing.beginDrawingTexture(texture);
 		final double x1 = (posX1 - centerX) * scale + width / 2D;
 		final double z1 = (posZ1 - centerY) * scale + height / 2D;
 		final double x2 = (posX2 - centerX) * scale + width / 2D;
 		final double z2 = (posZ2 - centerY) * scale + height / 2D;
-		final float uScale = x1 >= 0 ? 0 : 1F - (float) ((x2 - 0) / (x2 - x1));
-		guiDrawing.drawTexture(getX2() + Math.max(0, x1), getY2() + z1, getX2() + x2, getY2() + z2, uScale, 0, 1, 1);
+		final double[] clip = org.mtr.gtnh.DashboardMapView.clip(x1, z1, x2, z2, width, height);
+		if (clip == null) return;
+		guiDrawing.beginDrawingTexture(texture);
+		guiDrawing.drawTexture(getX2() + clip[0], getY2() + clip[1], getX2() + clip[2], getY2() + clip[3],
+			(float) clip[4], (float) clip[5], (float) clip[6], (float) clip[7]);
 		guiDrawing.finishDrawingTexture();
 	}
 

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "encoding": "UTF-8",
+  "source": {
+    "project": "Minecraft Transit Railway",
+    "version": "4.0.5",
+    "publishedVersion": "FORGE-4.0.5+1.16.5",
+    "modrinthVersionId": "m5DXsKjR",
+    "filename": "MTR-forge-4.0.5+1.16.5.jar",
+    "jarBytes": 84545600,
+    "jarSha256": "7f9286e7b0048f4a823d90ec1338cafc734aadc2460abb851686f4fa2502b322",
+    "jarSha512": "67d020dc981e2da1a0e2993798784987871809f07113eb850b70766b60b01dd75e7b0e2c97e3c56371db033c4903e8af891bed0b79c569669e3d04d0ade60932",
+    "providerClass": "org/mtr/mod/generated/WebserverResources.class",
+    "providerMajor": 52,
+    "providerSha256": "e2ce487d22b674489d8298e90d96989f55dde181f49ba4b1851f85e500e059b3"
+  },
+  "payloadSemantics": "Exact published provider get(key).getBytes(StandardCharsets.UTF_8) results. No frontend edits.",
+  "resources": {
+    "chunk-OO7PIGQZ.js": {
+      "bytes": 63926,
+      "sha256": "c95456c2d0a4ebc92b18f5d05537e71e7dbf21cff37487c4214cf93dc0f4afc9"
+    },
+    "chunk-VO2FIUOU.js": {
+      "bytes": 171105,
+      "sha256": "6c3a7d6bd79baac10599557958f2caa8c485ce32a9b1218309b0698985324b83"
+    },
+    "index.html": {
+      "bytes": 14486,
+      "sha256": "acd1ecdc5a1c32d80f878c1712a447450f501a54a47bb07d03b4e7723ad31ca3"
+    },
+    "main-FVTXCXTH.js": {
+      "bytes": 669763,
+      "sha256": "5d37e93a00926c37a21823046c4b3c4b50a7318e149773846a7e26e18746d1a3"
+    },
+    "polyfills-FFHMD2TL.js": {
+      "bytes": 34519,
+      "sha256": "69dcea045643dd0de998a3cd0ccbbb46b46bff2651a87a56c73c28eb208e8f98"
+    },
+    "styles-MKRTXLGB.css": {
+      "bytes": 9060,
+      "sha256": "21c6cb89985395e335a5fc02ba2f8b99f50b1f960aebaa3e3a40296a9daa03a9"
+    }
+  }
+}

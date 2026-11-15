@@ -16,6 +16,7 @@ import org.mtr.mod.Init;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.function.LongSupplier;
 
 /**
  * Sends a round trip request/response. This is meant to be used on the Minecraft client only.
@@ -25,13 +26,16 @@ import javax.annotation.Nullable;
 public abstract class PacketRequestResponseBase extends PacketHandler {
 
 	private final String content;
+	protected final LongSupplier millisSinceReceived;
 
 	public PacketRequestResponseBase(PacketBufferReceiver packetBufferReceiver) {
 		content = packetBufferReceiver.readString();
+		millisSinceReceived = packetBufferReceiver.getMillisSinceReceived();
 	}
 
 	public PacketRequestResponseBase(String content) {
 		this.content = content;
+		millisSinceReceived = () -> 0;
 	}
 
 	@Override
@@ -50,7 +54,7 @@ public abstract class PacketRequestResponseBase extends PacketHandler {
 	}
 
 	protected void runServerOutbound(ServerWorld serverWorld, @Nullable ServerPlayerEntity serverPlayerEntity) {
-		Init.sendMessageC2S(getKey(), serverWorld.getServer(), new World(serverWorld.data), getDataInstance(new JsonReader(Utilities.parseJson(content))), responseType() == ResponseType.NONE ? null : responseData -> {
+		Init.sendMessageC2S(getKey(), serverWorld.getServer(), new World(serverWorld.data), getDataInstance(new JsonReader(Utilities.parseJson(content)), serverPlayerEntity), responseType() == ResponseType.NONE ? null : responseData -> {
 			final JsonObject responseJson = Utilities.getJsonObjectFromData(responseData);
 			if (responseType() == ResponseType.PLAYER) {
 				if (serverPlayerEntity != null) {
@@ -76,6 +80,10 @@ public abstract class PacketRequestResponseBase extends PacketHandler {
 	protected abstract PacketRequestResponseBase getInstance(String content);
 
 	protected abstract SerializedDataBase getDataInstance(JsonReader jsonReader);
+
+	protected SerializedDataBase getDataInstance(JsonReader jsonReader, @Nullable ServerPlayerEntity sender) {
+		return getDataInstance(jsonReader);
+	}
 
 	@Nonnull
 	protected abstract String getKey();

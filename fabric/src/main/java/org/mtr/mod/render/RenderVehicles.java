@@ -329,17 +329,24 @@ public class RenderVehicles implements IGui {
 
 						if (canRide) {
 							// Main logic for player movement inside the car
-							VehicleRidingMovement.movePlayer(
-									millisElapsed, vehicle.getId(), carNumber,
-									floorsAndDoorways,
-									vehicleResource.hasGangway1() ? previousGangwayMovementPositions.gangwayMovementPositions : null,
-									vehicleResource.hasGangway1() ? gangwayMovementPositions1 : null,
-									vehicleResource.hasGangway2() ? gangwayMovementPositions2 : null,
-									absoluteVehicleCarPositionAndRotation
-							);
+							if (vehicleResourceCache == null || vehicleResource.hasGangway1() && carNumber > 0
+									&& (!previousGangwayMovementPositions.geometryAvailable || previousGangwayMovementPositions.carNumber != carNumber - 1)) {
+								VehicleRidingMovement.waitForGeometry(vehicle.getId(), carNumber);
+							} else {
+								VehicleRidingMovement.movePlayer(
+										millisElapsed, vehicle.getId(), carNumber,
+										floorsAndDoorways,
+										vehicleResource.hasGangway1() ? previousGangwayMovementPositions.gangwayMovementPositions : null,
+										vehicleResource.hasGangway1() ? gangwayMovementPositions1 : null,
+										vehicleResource.hasGangway2() ? gangwayMovementPositions2 : null,
+										absoluteVehicleCarPositionAndRotation
+								);
+							}
 						}
 
-						previousGangwayMovementPositions.gangwayMovementPositions = gangwayMovementPositions2;
+						previousGangwayMovementPositions.gangwayMovementPositions = vehicleResourceCache == null ? null : gangwayMovementPositions2;
+						previousGangwayMovementPositions.geometryAvailable = vehicleResourceCache != null;
+						previousGangwayMovementPositions.carNumber = carNumber;
 					});
 				}
 			});
@@ -630,6 +637,8 @@ public class RenderVehicles implements IGui {
 	private static class PreviousGangwayMovementPositions {
 
 		private GangwayMovementPositions gangwayMovementPositions;
+		private boolean geometryAvailable;
+		private int carNumber = -1;
 	}
 
 	@FunctionalInterface

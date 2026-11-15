@@ -15265,5 +15265,37 @@
 				"attenuation_distance": 64
 			}
 		]
+	},
+	"lift_arrival": {
+		"sounds": [
+			{
+				"name": "mtr:lift/arrival",
+				"attenuation_distance": 16
+			}
+		]
+	},
+	"lift_motor": {
+		"sounds": [
+			{
+				"name": "mtr:lift/motor",
+				"attenuation_distance": 16
+			}
+		]
+	},
+	"lift_door_open": {
+		"sounds": [
+			{
+				"name": "mtr:lift/door_open",
+				"attenuation_distance": 16
+			}
+		]
+	},
+	"lift_door_close": {
+		"sounds": [
+			{
+				"name": "mtr:lift/door_close",
+				"attenuation_distance": 16
+			}
+		]
 	}
 }

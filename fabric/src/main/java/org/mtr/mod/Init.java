@@ -25,7 +25,6 @@ import org.mtr.mapping.mapper.WorldHelper;
 import org.mtr.mapping.registry.CommandBuilder;
 import org.mtr.mapping.registry.Registry;
 import org.mtr.mapping.tool.DummyClass;
-import org.mtr.mixin.PlayerTeleportationStateAccessor;
 import org.mtr.mod.config.Config;
 import org.mtr.mod.data.ArrivalsCacheServer;
 import org.mtr.mod.data.RailActionModule;
@@ -70,7 +69,9 @@ public final class Init implements Utilities {
 	private static final int MILLIS_PER_MC_DAY = SECONDS_PER_MC_HOUR * MILLIS_PER_SECOND * HOURS_PER_DAY;
 	private static final Object2ObjectArrayMap<ServerWorld, RailActionModule> RAIL_ACTION_MODULES = new Object2ObjectArrayMap<>();
 	private static final ObjectArrayList<String> WORLD_ID_LIST = new ObjectArrayList<>();
-	private static final Object2ObjectAVLTreeMap<UUID, Runnable> RIDING_PLAYERS = new Object2ObjectAVLTreeMap<>();
+	private static final Object2ObjectAVLTreeMap<UUID, ServerPlayerEntity> RIDING_PLAYERS = new Object2ObjectAVLTreeMap<>();
+	// Core and its webserver resolve names without reading Minecraft's player list off-thread.
+	private static final java.util.concurrent.ConcurrentMap<UUID, String> CLIENT_NAMES = new java.util.concurrent.ConcurrentHashMap<>();
 
 	public static void init() {
 		LOGGER.info("Starting Minecraft with arguments:\n{}", String.join("\n", ManagementFactory.getRuntimeMXBean().getInputArguments()));
@@ -179,6 +180,8 @@ public final class Init implements Utilities {
 			});
 
 			Config.init(minecraftServer.getRunDirectory());
+			CLIENT_NAMES.clear();
+			Main.CLIENT_NAME_RESOLVER = uuid -> CLIENT_NAMES.getOrDefault(uuid, "");
 			final int defaultPort = Config.getServer().getWebserverPort();
 			serverPort = defaultPort <= 0 ? -1 : findFreePort(defaultPort);
 			main = new Main(minecraftServer.getSavePath(WorldSavePath.getRootMapped()).resolve("mtr"), serverPort, Config.getServer().getUseThreadedSimulation(), Config.getServer().getUseThreadedFileLoading(), webserverSetup, WORLD_ID_LIST.toArray(new String[0]));
@@ -212,10 +215,6 @@ public final class Init implements Utilities {
 				StrayThreadManager.register(minecraftServer);
 			}
 
-			Main.CLIENT_NAME_RESOLVER = uuid -> {
-				final ServerPlayerEntity serverPlayerEntity = minecraftServer.getPlayerManager().getPlayer(uuid);
-				return serverPlayerEntity == null ? "" : serverPlayerEntity.getName().getString();
-			};
 		});
 
 		REGISTRY.eventRegistry.registerServerStopping(minecraftServer -> {
@@ -223,6 +222,8 @@ public final class Init implements Utilities {
 				main.stop();
 			}
 			serverPort = 0;
+			CLIENT_NAMES.clear();
+			org.mtr.gtnh.RidingPermissions.clear();
 			RIDING_PLAYERS.clear();
 		});
 
@@ -246,9 +247,14 @@ public final class Init implements Utilities {
 				}
 			}
 
-			RIDING_PLAYERS.values().forEach(Runnable::run);
+			RIDING_PLAYERS.values().removeIf(player -> {
+				final boolean riding = org.mtr.gtnh.RidingPermissions.refresh(player);
+				updatePlayer(player, riding);
+				return !riding;
+			});
 		});
 
+		org.mtr.gtnh.RidingPermissions.initialize();
 		REGISTRY.eventRegistry.registerEndWorldTick(serverWorld -> {
 			final RailActionModule railActionModule = RAIL_ACTION_MODULES.get(serverWorld);
 			if (railActionModule != null) {
@@ -258,11 +264,20 @@ public final class Init implements Utilities {
 			if (main != null) {
 				final String dimension = getWorldId(new World(serverWorld.data));
 				main.processMessagesS2C(WORLD_ID_LIST.indexOf(dimension), queueObject -> MinecraftOperationProcessor.process(queueObject, serverWorld, dimension));
+				org.mtr.gtnh.RidingPermissions.tick(serverWorld, (first, second) -> org.mtr.mod.item.ItemLiftRefresher.findPath(new World(serverWorld.data), first, second));
 			}
 		});
 
-		REGISTRY.eventRegistry.registerPlayerJoin((minecraftServer, serverPlayerEntity) -> updatePlayer(serverPlayerEntity, false));
-		REGISTRY.eventRegistry.registerPlayerDisconnect((minecraftServer, serverPlayerEntity) -> RIDING_PLAYERS.remove(serverPlayerEntity.getUuid()));
+		REGISTRY.eventRegistry.registerPlayerJoin((minecraftServer, serverPlayerEntity) -> {
+			CLIENT_NAMES.put(serverPlayerEntity.getUuid(), serverPlayerEntity.getName().getString());
+			org.mtr.gtnh.RidingPermissions.disconnect(serverPlayerEntity);
+			updatePlayer(serverPlayerEntity, false);
+		});
+		REGISTRY.eventRegistry.registerPlayerDisconnect((minecraftServer, serverPlayerEntity) -> {
+			CLIENT_NAMES.remove(serverPlayerEntity.getUuid());
+			RIDING_PLAYERS.remove(serverPlayerEntity.getUuid());
+			org.mtr.gtnh.RidingPermissions.disconnect(serverPlayerEntity);
+		});
 
 		// Finish registration
 		REGISTRY.init();
@@ -286,7 +301,10 @@ public final class Init implements Utilities {
 
 	public static <T extends SerializedDataBase> void sendMessageC2S(String key, @Nullable MinecraftServer minecraftServer, @Nullable World world, SerializedDataBase data, @Nullable Consumer<T> consumer, @Nullable Class<T> responseDataClass) {
 		if (main != null) {
-			main.sendMessageC2S(world == null ? null : WORLD_ID_LIST.indexOf(getWorldId(world)), new QueueObject(key, data, consumer == null || minecraftServer == null ? null : responseData -> minecraftServer.execute(() -> consumer.accept(responseData)), responseDataClass));
+			main.sendMessageC2S(world == null ? null : WORLD_ID_LIST.indexOf(getWorldId(world)), new QueueObject(key, data, consumer == null || minecraftServer == null ? null : responseData -> {
+				final T snapshot = org.mtr.gtnh.CoreThreadHandoff.reply(responseData, responseDataClass);
+				minecraftServer.execute(() -> consumer.accept(snapshot));
+			}, responseDataClass));
 		}
 	}
 
@@ -309,9 +327,10 @@ public final class Init implements Utilities {
 	public static void updateRidingEntity(ServerPlayerEntity serverPlayerEntity, boolean dismount) {
 		if (dismount) {
 			RIDING_PLAYERS.remove(serverPlayerEntity.getUuid());
+			org.mtr.gtnh.RidingPermissions.revoke(serverPlayerEntity);
 			updatePlayer(serverPlayerEntity, false);
 		} else {
-			RIDING_PLAYERS.put(serverPlayerEntity.getUuid(), () -> updatePlayer(serverPlayerEntity, true));
+			RIDING_PLAYERS.put(serverPlayerEntity.getUuid(), serverPlayerEntity);
 		}
 	}
 
@@ -404,7 +423,7 @@ public final class Init implements Utilities {
 		serverPlayerEntity.setFallDistanceMapped(0);
 		serverPlayerEntity.setNoGravity(isRiding);
 		serverPlayerEntity.setNoClipMapped(isRiding);
-		((PlayerTeleportationStateAccessor) serverPlayerEntity.data).setInTeleportationState(isRiding);
+		serverPlayerEntity.setInTeleportationState(isRiding);
 	}
 
 	private enum DepotOperation {

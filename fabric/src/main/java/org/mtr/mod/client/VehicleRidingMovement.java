@@ -33,6 +33,8 @@ public class VehicleRidingMovement {
 	private static boolean isOnGangway;
 	private static int ridingVehicleCooldown;
 	private static float shiftHoldingTicks;
+	private static boolean waitingForGeometry;
+	private static long geometryUnavailableUntilNanos;
 
 	private static int ridingVehicleCarNumberCacheOld;
 	private static Vector3d ridingPositionCacheOld;
@@ -116,6 +118,9 @@ public class VehicleRidingMovement {
 		if (ridingVehicleId == 0 || isRiding(vehicleId)) {
 			for (final Box floorOrDoorway : openFloorsAndDoorways) {
 				if (RenderVehicleHelper.boxContains(floorOrDoorway, x, y, z)) {
+					if (ridingVehicleId != vehicleId || ridingVehicleCarNumber != carNumber) {
+						waitingForGeometry = false;
+					}
 					ridingDepotId = depotId;
 					ridingSidingId = sidingId;
 					ridingVehicleId = vehicleId;
@@ -136,6 +141,25 @@ public class VehicleRidingMovement {
 		}
 	}
 
+	/** Wait only for the selected car's lazy resource cache, without moving or boarding anyone. */
+	public static void waitForGeometry(long vehicleId, int carNumber) {
+		if (vehicleId != 0 && isRiding(vehicleId) && ridingVehicleCarNumber == carNumber) {
+			final long now = System.nanoTime();
+			if (!waitingForGeometry) {
+				waitingForGeometry = true;
+				geometryUnavailableUntilNanos = now + 10_000_000_000L;
+			}
+			if (now - geometryUnavailableUntilNanos < 0) {
+				ridingVehicleCooldown = 0;
+			} else {
+				sendUpdate(true);
+				ridingDepotId = 0;
+				ridingSidingId = 0;
+				ridingVehicleId = 0;
+			}
+		}
+	}
+
 	public static void movePlayer(
 			long millisElapsed, long vehicleId, int carNumber,
 			ObjectArrayList<ObjectBooleanImmutablePair<Box>> floorsAndDoorways,
@@ -150,6 +174,7 @@ public class VehicleRidingMovement {
 		}
 
 		if (isRiding(vehicleId) && ridingVehicleCarNumber == carNumber) {
+			waitingForGeometry = false;
 			ridingVehicleCooldown = 0;
 			final double entityYawOld = EntityHelper.getYaw(new Entity(clientPlayerEntity.data));
 			final float speedMultiplier = millisElapsed * VEHICLE_WALKING_SPEED_MULTIPLIER * (clientPlayerEntity.isSprinting() ? 2 : 1);
@@ -397,6 +422,9 @@ public class VehicleRidingMovement {
 	}
 
 	private static void sendUpdate(boolean dismount) {
+		if (dismount) {
+			waitingForGeometry = false;
+		}
 		if (ridingVehicleId != 0) {
 			InitClient.REGISTRY_CLIENT.sendPacketToServer(PacketUpdateVehicleRidingEntities.create(ridingSidingId, ridingVehicleId, dismount ? -1 : ridingVehicleCarNumber, ridingVehicleX, ridingVehicleY, ridingVehicleZ, isOnGangway, isHoldingDriverKey, pressingAccelerateTicks == 1, pressingBrakeTicks == 1, pressingDoorsTicks == 1, pressingAtoTicks == 1, doorOverrideTicks > 1));
 			sendPositionUpdateTime = 0;

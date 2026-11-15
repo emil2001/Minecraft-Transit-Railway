@@ -1,0 +1,170 @@
+{
+  "format_version": 1,
+  "retrieved_date": "2026-10-26",
+  "codec": "Ogg Vorbis",
+  "channels": 1,
+  "sample_rate_hz": 44100,
+  "preparation_tools": {
+    "ffmpeg": "ffmpeg",
+    "soundfile": "0.13.1",
+    "libsndfile": "1.2.2",
+    "vorbis_compression_level": 0.5
+  },
+  "license_verification": "CC0-1.0 link verified on each primary source page; public redistribution and modification permitted. Source and page hashes retained.",
+  "preview_policy": "Freesound public HQ preview URLs were exposed in primary page HTML. No login or private original download endpoint was used.",
+  "validation": "Decoded all four outputs, checked format, finite samples, duration and peak level; checked motor loop boundary against interior sample differences. Both door outputs are exactly 70560 decoded samples / 1600 ms; unchanged asset hashes are verified on partial preparation runs.",
+  "listening_validation": false,
+  "limitations": [
+    "No auditory review or in-game playback was performed. Neutrality, lack of incidental voices and perceptual seam quality require human listening.",
+    "Freesound files are lossy public MP3 previews re-encoded to Vorbis; the original WAVs were not downloaded.",
+    "Motor is a 3.75-second loop made from a short real approaching-motor segment; real recording ambience remains.",
+    "Arrival is a short mechanical library-elevator bell excerpt; the door portion of that source is excluded.",
+    "Door recordings are shortened with pitch-preserving atempo to match the 1600 ms door movement; motion texture can change despite preserved pitch."
+  ],
+  "sounds": [
+    {
+      "name": "arrival",
+      "file": "assets/mtr/sounds/lift/arrival.ogg",
+      "sha256": "d1623041ee96c62231837062fb68f31230ca2d7a14a7da1db01019d9a789c8a6",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": {
+        "title": "Elevator Ding and Door.wav",
+        "author": "maxmaxmaxmaxmaxmaxmax",
+        "page": "https://freesound.org/people/maxmaxmaxmaxmaxmaxmax/sounds/439423/",
+        "download": "https://cdn.freesound.org/previews/439/439423_8080193-hq.mp3",
+        "recording": "Mechanical arrival bell of the George Peabody Library elevator; leading bell excerpt before door movement.",
+        "quality": "Public HQ MP3 preview, 48 kHz stereo; original listed as 96 kHz, 24-bit stereo WAV."
+      },
+      "source_file": "freesound-439423-hq.mp3",
+      "source_sha256": "1b7c130c7901ccc926fc83c6af01eb0c4935a51f75eec1875bd38c4b114de8c8",
+      "license_evidence_file": "freesound-439423.html",
+      "license_evidence_sha256": "b5b5bb68021da193299a4a7ce69d194cb24567b1cc1d124aede1649d024cd525",
+      "operations": [
+        "Mono downmix and resample to 44100 Hz.",
+        "Filters: highpass=f=180,lowpass=f=5000.",
+        "Trim source interval [0.05, 0.52) seconds.",
+        "Linear fade in 0.005 s and fade out 0.1 s.",
+        "Constant gain -0.18195436 dB; no compression, pitch change, time stretch, reversal, generated audio or added speech."
+      ],
+      "metrics": {
+        "duration_seconds": 0.47,
+        "samples": 20727,
+        "bytes": 8358,
+        "peak_dbfs": -7.646652051303394,
+        "rms_dbfs": -35.21536900740382
+      }
+    },
+    {
+      "name": "motor",
+      "file": "assets/mtr/sounds/lift/motor.ogg",
+      "sha256": "1eb34e8f4c98646c50e8bb8f87e13a71092d04f9fba6c1f353215b9995c7b284",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": {
+        "title": "Elevator Approaching Motor.wav",
+        "author": "maxmaxmaxmaxmaxmaxmax",
+        "page": "https://freesound.org/people/maxmaxmaxmaxmaxmax/sounds/439419/",
+        "download": "https://cdn.freesound.org/previews/439/439419_8080193-hq.mp3",
+        "recording": "Motor of the George Peabody Library elevator approaching the top of its route.",
+        "quality": "Public HQ MP3 preview, 48 kHz stereo; original listed as 96 kHz, 24-bit stereo WAV."
+      },
+      "source_file": "freesound-439419-hq.mp3",
+      "source_sha256": "043b4e40490a97408fe9520ad1466dfc10a1611e4732e8f92888228f8d6be00d",
+      "license_evidence_file": "freesound-439419.html",
+      "license_evidence_sha256": "a69e26f800304ddf7e1456009b7a6a23ba2f9055ab6d1f08179305154e538bd6",
+      "operations": [
+        "Mono downmix and resample to 44100 Hz.",
+        "Filters: highpass=f=45,lowpass=f=1600.",
+        "Trim source interval [17.0, 21.0) seconds.",
+        "Circular linear tail/head crossfade, 11025 samples (0.25 s); output is middle section followed by blended tail/head, no start/end silence or fade.",
+        "Constant gain 10.14997684 dB; no compression, pitch change, time stretch, reversal, generated audio or added speech."
+      ],
+      "metrics": {
+        "duration_seconds": 3.75,
+        "samples": 165375,
+        "bytes": 35558,
+        "peak_dbfs": -17.178436763205926,
+        "rms_dbfs": -30.06179373177305,
+        "loop_boundary_sample_jump": 0.00037358328700065613,
+        "interior_sample_delta_p99": 0.004858814179897308
+      }
+    },
+    {
+      "name": "door_open",
+      "file": "assets/mtr/sounds/lift/door_open.ogg",
+      "sha256": "302c1cdab72218be24fd7e133c98febf8f99949c654f5e2b64a206ff9f458873",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": {
+        "title": "Elevator_Door",
+        "author": "PagDev",
+        "page": "https://opengameart.org/content/elevatordoor",
+        "download": "https://opengameart.org/sites/default/files/elevator_door.wav",
+        "recording": "Elevator door opening; source description identifies an opening sound effect.",
+        "quality": "Original downloadable 44.1 kHz stereo, 32-bit PCM WAV."
+      },
+      "source_file": "opengameart-elevator_door.wav",
+      "source_sha256": "56307cd725cb7756dd7319487c19b0e5f79968816df228f14803406e875226fa",
+      "license_evidence_file": "opengameart-elevatordoor.html",
+      "license_evidence_sha256": "b02eb6e391d8c77d048e8c11633ad4708efdef432bea51b749a44fd9e2f29620",
+      "operations": [
+        "Mono downmix and resample to 44100 Hz.",
+        "Filters: highpass=f=70,lowpass=f=6000.",
+        "Trim source interval [0.0, 3.5) seconds.",
+        "Pitch-preserving FFmpeg time stretch: atempo=1.75,atempo=1.25 (effective tempo 2.1875x). Then apad=whole_len=70560,atrim=end_sample=70560 to set exactly 1.6 seconds before fades.",
+        "Length correction after atempo: 71569 samples before correction; trim 1009 samples or append 0 zero samples.",
+        "Linear fade in 0.01 s and fade out 0.08 s.",
+        "Constant gain -6.56848757 dB; no compression, pitch change, reversal, generated audio or added speech."
+      ],
+      "metrics": {
+        "duration_seconds": 1.6,
+        "samples": 70560,
+        "bytes": 16682,
+        "peak_dbfs": -10.089685749773222,
+        "rms_dbfs": -24.83068148075535,
+        "atempo_samples_before_length_correction": 71569,
+        "trimmed_samples": 1009,
+        "padded_zero_samples": 0
+      }
+    },
+    {
+      "name": "door_close",
+      "file": "assets/mtr/sounds/lift/door_close.ogg",
+      "sha256": "e9448e5e4d093b19e888b370583b9c4ef6179de6a884609855328a17e7e0b844",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": {
+        "title": "Door - Elevator, Closing",
+        "author": "colinpoh",
+        "page": "https://freesound.org/people/colinpoh/sounds/146342/",
+        "download": "https://cdn.freesound.org/previews/146/146342_2090377-hq.mp3",
+        "recording": "Elevator door closing, recorded with a Zoom H4n.",
+        "quality": "Public HQ MP3 preview; original listed as 44.1 kHz, 16-bit stereo WAV."
+      },
+      "source_file": "freesound-146342-hq.mp3",
+      "source_sha256": "f28e48a7fbc61187c0e6a4599fc1140b356bb3385f2a144b42265578678ba0ca",
+      "license_evidence_file": "freesound-146342.html",
+      "license_evidence_sha256": "a53bc9ad9fdfe491f4e67c3f6d89f9c79c2f380c9a60f94f1b955a693e0cb4c5",
+      "operations": [
+        "Mono downmix and resample to 44100 Hz.",
+        "Filters: highpass=f=70,lowpass=f=6000.",
+        "Trim source interval [0.0, 2.82) seconds.",
+        "Pitch-preserving FFmpeg time stretch: atempo=1.7625 (effective tempo 1.7625x). Then apad=whole_len=70560,atrim=end_sample=70560 to set exactly 1.6 seconds before fades.",
+        "Length correction after atempo: 70165 samples before correction; trim 0 samples or append 395 zero samples.",
+        "Linear fade in 0.01 s and fade out 0.08 s.",
+        "Constant gain 8.61978517 dB; no compression, pitch change, reversal, generated audio or added speech."
+      ],
+      "metrics": {
+        "duration_seconds": 1.6,
+        "samples": 70560,
+        "bytes": 18855,
+        "peak_dbfs": -9.940151146589578,
+        "rms_dbfs": -26.577540782735596,
+        "atempo_samples_before_length_correction": 70165,
+        "trimmed_samples": 0,
+        "padded_zero_samples": 395
+      }
+    }
+  ]
+}

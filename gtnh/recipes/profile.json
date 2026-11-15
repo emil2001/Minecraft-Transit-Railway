@@ -1,0 +1,5756 @@
+{
+  "schema": 1,
+  "replacements": [
+    {
+      "output": "mtr:airplane_node",
+      "count": 4,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 200,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:apg_door",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32640
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 4
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 10
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:apg_glass",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:apg_door",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:apg_glass_end",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:apg_glass",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:arrival_projector_1_large",
+      "count": 1,
+      "tier": "MV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:arrival_projector_1_medium",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:arrival_projector_1_medium",
+      "count": 1,
+      "tier": "MV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:arrival_projector_1_small",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:arrival_projector_1_small",
+      "count": 2,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32681
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:boat_node",
+      "count": 4,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plankWood",
+          "amount": 8,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 4,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 480
+    },
+    {
+      "output": "mtr:brush",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "minecraft:wool",
+          "amount": 1,
+          "meta": 0
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stick",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:cable_car_node_lower",
+      "count": 8,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:cable_car_node_station",
+      "count": 8,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 2
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:cable_car_node_upper",
+      "count": 8,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 3
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:ceiling",
+      "count": 16,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glowstone_dust",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:ceiling_light",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:ceiling",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:ceiling_no_light",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:ceiling_light",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:clock",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:clock",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 1,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:clock_pole",
+      "count": 8,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 3,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:dashboard",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 2,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 21
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 480
+    },
+    {
+      "output": "mtr:dashboard_2",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 2,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:boat",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 480
+    },
+    {
+      "output": "mtr:dashboard_3",
+      "count": 1,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 2,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32691
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 24
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 120
+    },
+    {
+      "output": "mtr:dashboard_4",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 2,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:driver_key_dispenser",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dispenser",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:escalator",
+      "count": 4,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32601
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32631
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 8,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateRubber",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 400,
+      "eut": 120
+    },
+    {
+      "output": "mtr:lift_buttons_1",
+      "count": 8,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stone_button",
+          "amount": 4
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:lift_buttons_link_connector",
+      "count": 1,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32691
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 300,
+      "eut": 120
+    },
+    {
+      "output": "mtr:lift_buttons_link_remover",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stone_button",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_door_1",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32640
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 4
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 11
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:lift_door_odd_1",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:lift_door_1",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_panel_even_1",
+      "count": 4,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stone_button",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_panel_even_2",
+      "count": 2,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:lift_panel_even_1",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_panel_odd_1",
+      "count": 4,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stone_button",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_panel_odd_2",
+      "count": 2,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:lift_panel_odd_1",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_refresher",
+      "count": 1,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32601
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32641
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 2,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 8,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 4,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 120
+    },
+    {
+      "output": "mtr:lift_track_1",
+      "count": 8,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 4,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:lift_track_floor_1",
+      "count": 4,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:logo",
+      "count": 4,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:metal",
+      "count": 8,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:pids_1",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 4
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 9
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:pids_2",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:pids_1",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:pids_3",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:pids_2",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:pids_4",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:pids_3",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:pids_pole",
+      "count": 16,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:pids_single_arrival_1",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:pids_4",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:psd_door",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32640
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 4
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:psd_door_2",
+      "count": 2,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:psd_door",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "output": "mtr:psd_glass",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:psd_door",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:psd_glass_2",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:psd_door_2",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:psd_glass_end",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:psd_glass",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:psd_glass_end_2",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:psd_glass_2",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:rail",
+      "count": 16,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 8,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 8,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 4,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_100",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 5
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_100_one_way",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 15
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_120",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 6
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_120_one_way",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 16
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_140",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 7
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_140_one_way",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 17
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_160",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 8
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_160_one_way",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 18
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_20",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_200",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 9
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_200_one_way",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 19
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_20_one_way",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 11
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_300",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 10
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_300_one_way",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32693
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 20
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_40",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 2
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_40_one_way",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 12
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_60",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 3
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_60_one_way",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 13
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_80",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 4
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_80_one_way",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32692
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 14
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_connector_cable_car",
+      "count": 1,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32601
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 23
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 400,
+      "eut": 120
+    },
+    {
+      "output": "mtr:rail_connector_platform",
+      "count": 1,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32641
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 21
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 400,
+      "eut": 120
+    },
+    {
+      "output": "mtr:rail_connector_runway",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32683
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Aluminium",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 24
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:rail_connector_siding",
+      "count": 1,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32631
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 22
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 400,
+      "eut": 120
+    },
+    {
+      "output": "mtr:rail_connector_turn_back",
+      "count": 1,
+      "tier": "HV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateStainlessSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitAdvanced",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32642
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Gold",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 24
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 400,
+      "eut": 480
+    },
+    {
+      "output": "mtr:rail_remover",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_2_even",
+      "count": 4,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glowstone_dust",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_2_odd",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_2_even",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_3_even",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_2_even",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:sign",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_3_odd",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_3_even",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_4_even",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_3_even",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:sign",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_4_odd",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_4_even",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_5_even",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_4_even",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:sign",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_5_odd",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_5_even",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_6_even",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_5_even",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:sign",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_6_odd",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_6_even",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_7_even",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_6_even",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:sign",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_7_odd",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:railway_sign_7_even",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:railway_sign_pole",
+      "count": 16,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 3,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:route_sign_standing_light",
+      "count": 8,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glowstone_dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:route_sign_standing_metal",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:route_sign_standing_light",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:route_sign_wall_light",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:route_sign_standing_metal",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:route_sign_wall_metal",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:route_sign_wall_light",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:rubbish_bin_1",
+      "count": 2,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 3,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "ringSteel",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:signal_connector_black",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 0
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_blue",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 4
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_brown",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 3
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_cyan",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 6
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_gray",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 8
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_green",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_light_blue",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 12
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_light_gray",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 7
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_lime",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 10
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_magenta",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 13
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_orange",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 14
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_pink",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 9
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_purple",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 5
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_red",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_white",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 15
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_connector_yellow",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 11
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_1",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_2",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 2
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_3",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 3
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_3_aspect_1",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 5
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_3_aspect_2",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 6
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_4",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 4
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_4_aspect_1",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 7
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_light_4_aspect_2",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 8
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_pole",
+      "count": 8,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        }
+      ]
+    },
+    {
+      "output": "mtr:signal_remover_black",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 0
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_blue",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 4
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_brown",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 3
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_cyan",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 6
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_gray",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 8
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_green",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 2
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_light_blue",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 12
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_light_gray",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 7
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_lime",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 10
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_magenta",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 13
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_orange",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 14
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_pink",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 9
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_purple",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 5
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_red",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_white",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 15
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_remover_yellow",
+      "count": 1,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "screwSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 11
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 100,
+      "eut": 30
+    },
+    {
+      "output": "mtr:signal_semaphore_1",
+      "count": 2,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:signal_pole",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 2
+        }
+      ]
+    },
+    {
+      "output": "mtr:signal_semaphore_2",
+      "count": 2,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:signal_pole",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone_torch",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 2
+        }
+      ]
+    },
+    {
+      "output": "mtr:station_name_wall",
+      "count": 4,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:sign",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "output": "mtr:station_name_wall_black",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:station_name_wall_gray",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:station_name_wall_gray",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:station_name_wall",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:station_pole",
+      "count": 8,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "stickSteel",
+          "amount": 3,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 1,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:dye",
+          "amount": 1,
+          "meta": 15
+        }
+      ]
+    },
+    {
+      "output": "mtr:tactile_map",
+      "count": 1,
+      "tier": "Steam",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:paper",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stone_button",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:ticket_barrier_entrance_1",
+      "count": 4,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32641
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 300,
+      "eut": 120
+    },
+    {
+      "output": "mtr:ticket_barrier_exit_1",
+      "count": 1,
+      "tier": "MV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:ticket_barrier_entrance_1",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:ticket_machine",
+      "count": 2,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32691
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 4
+        },
+        {
+          "kind": "ore",
+          "id": "cableGt01Copper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:stone_button",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 300,
+      "eut": 120
+    },
+    {
+      "output": "mtr:ticket_processor",
+      "count": 4,
+      "tier": "LV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "circuitBasic",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:glass_pane",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:paper",
+          "amount": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 36
+      },
+      "duration": 200,
+      "eut": 30
+    },
+    {
+      "output": "mtr:ticket_processor_enquiry",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:ticket_processor_exit",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:ticket_processor_entrance",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:ticket_processor",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:ticket_processor_exit",
+      "count": 1,
+      "tier": "LV",
+      "method": "shapeless",
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "mtr:ticket_processor_entrance",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "output": "mtr:train_announcer",
+      "count": 4,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32681
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:noteblock",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:train_schedule_sensor",
+      "count": 4,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32691
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:clock",
+          "amount": 1
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:train_sensor",
+      "count": 4,
+      "tier": "MV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateSteel",
+          "amount": 2,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 1,
+          "meta": 32691
+        },
+        {
+          "kind": "ore",
+          "id": "circuitGood",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "minecraft:redstone",
+          "amount": 2
+        },
+        {
+          "kind": "ore",
+          "id": "foilCopper",
+          "amount": 2,
+          "canonical": true
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 72
+      },
+      "duration": 200,
+      "eut": 120
+    },
+    {
+      "output": "mtr:tunnel_creator_4_3",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 1
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_4_5",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 2
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_4_7",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 3
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_4_9",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 4
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_5_3",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 5
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_5_5",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 6
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_5_7",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 7
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_5_9",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 8
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_6_3",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 9
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_6_5",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 10
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_6_7",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 11
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    },
+    {
+      "output": "mtr:tunnel_creator_6_9",
+      "count": 1,
+      "tier": "EV",
+      "method": "assembler",
+      "inputs": [
+        {
+          "kind": "ore",
+          "id": "plateTitanium",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "ore",
+          "id": "circuitData",
+          "amount": 1,
+          "canonical": false
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32603
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.metaitem.01",
+          "amount": 2,
+          "meta": 32643
+        },
+        {
+          "kind": "ore",
+          "id": "gearGtSmallSteel",
+          "amount": 4,
+          "canonical": true
+        },
+        {
+          "kind": "item",
+          "id": "gregtech:gt.integrated_circuit",
+          "amount": 0,
+          "meta": 12
+        }
+      ],
+      "fluid": {
+        "id": "molten.solderingalloy",
+        "amount": 144
+      },
+      "duration": 600,
+      "eut": 1920
+    }
+  ],
+  "restore": [
+    "mtr:apg_door_2",
+    "mtr:arrival_projector_1_small_2",
+    "mtr:cable_car_node_lower_2",
+    "mtr:cable_car_node_station",
+    "mtr:cable_car_node_upper",
+    "mtr:ceiling_2",
+    "mtr:lift_panel_even_1_1",
+    "mtr:lift_panel_odd_1_1",
+    "mtr:pids_1_2",
+    "mtr:psd_door_1_1",
+    "mtr:psd_door_1_2",
+    "mtr:psd_door_2_1",
+    "mtr:psd_glass_1_2",
+    "mtr:psd_glass_2_2",
+    "mtr:psd_glass_end_1_2",
+    "mtr:psd_glass_end_2_2",
+    "mtr:railway_sign_2_even_2",
+    "mtr:railway_sign_3_even_2",
+    "mtr:railway_sign_4_even_2",
+    "mtr:railway_sign_5_even_2",
+    "mtr:railway_sign_6_even_2",
+    "mtr:railway_sign_7_even_2",
+    "mtr:route_sign_standing_light_2",
+    "mtr:station_name_wall_white_2",
+    "mtr:ticket_barrier_entrance_1_2",
+    "mtr:ticket_processor_2"
+  ]
+}

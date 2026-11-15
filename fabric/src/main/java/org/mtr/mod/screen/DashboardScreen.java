@@ -442,9 +442,9 @@ public class DashboardScreen extends ScreenExtension implements IGui {
 	}
 
 	@Override
-	public void onClose2() {
+	public void removed2() {
 		widgetMap.onClose();
-		super.onClose2();
+		super.removed2();
 	}
 
 	private void stopEditing() {

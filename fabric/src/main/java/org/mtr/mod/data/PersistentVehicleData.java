@@ -52,10 +52,21 @@ public final class PersistentVehicleData {
 	 * @param totalVehicleLength the total length of this vehicle
 	 */
 	public void update(double newRailProgress, double totalVehicleLength) {
+		updateSnapshot(newRailProgress, totalVehicleLength);
+	}
+
+	public boolean updateSnapshot(double newRailProgress, double totalVehicleLength) {
 		railProgressSmoothingAdjustment = newRailProgress - smoothedRailProgress;
 		if (Math.abs(railProgressSmoothingAdjustment) > totalVehicleLength - 1) {
 			railProgressSmoothingAdjustment = 0;
+			return false;
 		}
+		return true;
+	}
+
+	public void updatePrediction(double predictedRailProgress, double frameAdvance, double totalVehicleLength, double stoppingPoint) {
+		final double visibleAdvance = Math.min(frameAdvance, stoppingPoint - smoothedRailProgress);
+		update(predictedRailProgress - visibleAdvance, totalVehicleLength);
 	}
 
 	public double getSmoothedRailProgress(double railProgress, double adjustmentAmount) {
@@ -66,6 +77,14 @@ public final class PersistentVehicleData {
 		}
 		smoothedRailProgress = railProgress - railProgressSmoothingAdjustment;
 		return smoothedRailProgress;
+	}
+
+	public void approachStoppingPoint(double oldRailProgress, double railProgress, double stoppingPoint) {
+		if (railProgress == stoppingPoint) {
+			railProgressSmoothingAdjustment = 0;
+		} else if (oldRailProgress < railProgress && railProgress < stoppingPoint) {
+			railProgressSmoothingAdjustment *= (stoppingPoint - railProgress) / (stoppingPoint - oldRailProgress);
+		}
 	}
 
 	public ObjectArrayList<ScrollingText> getScrollingText(int carNumber) {
@@ -79,6 +98,7 @@ public final class PersistentVehicleData {
 	public void tick(double railProgress, long millisElapsed, VehicleExtraData vehicleExtraData) {
 		oldDoorValue = doorValue;
 		doorValue = Utilities.clamp(doorValue + (double) (millisElapsed * getAdjustedDoorMultiplier(vehicleExtraData)) / Vehicle.DOOR_MOVE_TIME, 0, 1);
+		vehicleSoundBaseList.forEach(sound -> sound.updateDoorSound(doorValue, oldDoorValue));
 		if (checkCanOpenDoors()) {
 			doorCooldown--;
 		} else {

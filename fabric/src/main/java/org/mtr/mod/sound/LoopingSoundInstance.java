@@ -27,6 +27,7 @@ public class LoopingSoundInstance extends AbstractSoundInstanceExtension impleme
 	public void setPos(BlockPos blockPos, boolean isRemoved) {
 		if (isRemoved) {
 			if (getXMapped() == blockPos.getX() && getYMapped() == blockPos.getY() && getZMapped() == blockPos.getZ()) {
+				MinecraftClient.getInstance().getSoundManager().stop(new SoundInstance(this));
 				setXMapped(0);
 				setYMapped(Integer.MAX_VALUE);
 				setZMapped(0);
@@ -41,7 +42,9 @@ public class LoopingSoundInstance extends AbstractSoundInstanceExtension impleme
 			final int distance = playerPos.getManhattanDistance(new Vector3i(blockPos.data));
 
 			if (distance <= MAX_DISTANCE) {
-				final int currentDistance = playerPos.getManhattanDistance(new Vector3i(MathHelper.floor(getXMapped()), MathHelper.floor(getYMapped()), MathHelper.floor(getZMapped())));
+				// The reset position lies outside the world and can overflow an integer distance.
+				final double currentDistance = Math.abs(playerPos.getX() - getXMapped())
+						+ Math.abs(playerPos.getY() - getYMapped()) + Math.abs(playerPos.getZ() - getZMapped());
 
 				if (distance < currentDistance) {
 					setXMapped(blockPos.getX());

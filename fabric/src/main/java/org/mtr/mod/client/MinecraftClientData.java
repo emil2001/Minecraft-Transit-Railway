@@ -15,9 +15,12 @@ import org.mtr.mod.block.BlockNode;
 import org.mtr.mod.data.PersistentVehicleData;
 import org.mtr.mod.data.VehicleExtension;
 import org.mtr.mod.screen.DashboardListItem;
+import org.mtr.mod.packet.ClientPacketHelper;
+import org.mtr.mod.sound.LiftSound;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,10 @@ public final class MinecraftClientData extends ClientData {
 	public final ObjectArrayList<DashboardListItem> railActions = new ObjectArrayList<>();
 
 	private final LongAVLTreeSet routeIdsWithDisabledAnnouncements = new LongAVLTreeSet();
+	private BlockPos pendingLiftScreen;
+	private Object pendingLiftScreenWorld;
+	private Object pendingLiftScreenParent;
+	private long pendingLiftScreenExpires;
 
 	private static MinecraftClientData instance = new MinecraftClientData();
 	private static MinecraftClientData dashboardInstance = new MinecraftClientData();
@@ -52,9 +59,9 @@ public final class MinecraftClientData extends ClientData {
 	@Override
 	public void sync() {
 		super.sync();
-		checkAndRemoveFromMap(vehicleIdToPersistentVehicleData, vehicles, NameColorDataBase::getId);
+		checkAndRemoveFromMap(vehicleIdToPersistentVehicleData, vehicles, NameColorDataBase::getId, value -> {});
 
-		checkAndRemoveFromMap(liftWrapperList, lifts, Lift::getId);
+		checkAndRemoveFromMap(liftWrapperList, lifts, Lift::getId, wrapper -> wrapper.sound.dispose());
 		lifts.forEach(lift -> {
 			final LiftWrapper liftWrapper = liftWrapperList.get(lift.getId());
 			if (liftWrapper == null) {
@@ -64,7 +71,7 @@ public final class MinecraftClientData extends ClientData {
 			}
 		});
 
-		checkAndRemoveFromMap(railWrapperList, rails, Rail::getHexId);
+		checkAndRemoveFromMap(railWrapperList, rails, Rail::getHexId, value -> {});
 		positionsToRail.forEach((startPosition, railMap) -> railMap.forEach((endPosition, rail) -> {
 			final String hexId = rail.getHexId();
 			final RailWrapper railWrapper = railWrapperList.get(hexId);
@@ -76,6 +83,45 @@ public final class MinecraftClientData extends ClientData {
 		}));
 
 		simplifiedRoutes.forEach(simplifiedRoute -> simplifiedRouteIdMap.put(simplifiedRoute.getId(), simplifiedRoute));
+		openPendingLiftScreen();
+	}
+
+	public void requestLiftCustomizationScreen(BlockPos blockPos) {
+		final MinecraftClient client = MinecraftClient.getInstance();
+		final ClientWorld world = client.getWorldMapped();
+		final Screen screen = client.getCurrentScreenMapped();
+		pendingLiftScreen = blockPos;
+		pendingLiftScreenWorld = world == null ? null : world.data;
+		pendingLiftScreenParent = screen == null ? null : screen.data;
+		pendingLiftScreenExpires = System.nanoTime() + 10_000_000_000L;
+		openPendingLiftScreen();
+	}
+
+	private void openPendingLiftScreen() {
+		if (pendingLiftScreen == null) {
+			return;
+		}
+		final MinecraftClient client = MinecraftClient.getInstance();
+		final ClientWorld world = client.getWorldMapped();
+		final Screen screen = client.getCurrentScreenMapped();
+		if (System.nanoTime() - pendingLiftScreenExpires >= 0 || world == null || world.data != pendingLiftScreenWorld || (screen == null ? null : screen.data) != pendingLiftScreenParent) {
+			clearPendingLiftScreen();
+			return;
+		}
+		// The open packet can arrive before the simulator's first canonical lift update.
+		for (final Lift lift : lifts) {
+			if (lift.getFloorIndex(Init.blockPosToPosition(pendingLiftScreen)) >= 0) {
+				clearPendingLiftScreen();
+				ClientPacketHelper.openKnownLiftCustomizationScreen(lift);
+				return;
+			}
+		}
+	}
+
+	private void clearPendingLiftScreen() {
+		pendingLiftScreen = null;
+		pendingLiftScreenWorld = null;
+		pendingLiftScreenParent = null;
 	}
 
 	@Nullable
@@ -142,6 +188,7 @@ public final class MinecraftClientData extends ClientData {
 	}
 
 	public static void reset() {
+		instance.liftWrapperList.values().forEach(wrapper -> wrapper.sound.dispose());
 		MinecraftClientData.instance = new MinecraftClientData();
 		MinecraftClientData.dashboardInstance = new MinecraftClientData();
 	}
@@ -202,7 +249,7 @@ public final class MinecraftClientData extends ClientData {
 		return map;
 	}
 
-	private static <T, U, V> void checkAndRemoveFromMap(Map<T, U> map, ObjectSet<V> dataSet, Function<V, T> getId) {
+	private static <T, U, V> void checkAndRemoveFromMap(Map<T, U> map, ObjectSet<V> dataSet, Function<V, T> getId, Consumer<U> onRemove) {
 		final ObjectAVLTreeSet<T> idSet = dataSet.stream().map(getId).collect(Collectors.toCollection(ObjectAVLTreeSet::new));
 		final ObjectArrayList<T> idsToRemove = new ObjectArrayList<>();
 		map.keySet().forEach(id -> {
@@ -210,12 +257,13 @@ public final class MinecraftClientData extends ClientData {
 				idsToRemove.add(id);
 			}
 		});
-		idsToRemove.forEach(map::remove);
+		idsToRemove.forEach(id -> onRemove.accept(map.remove(id)));
 	}
 
 	public static class LiftWrapper {
 
 		public boolean shouldRender;
+		public final LiftSound sound = new LiftSound();
 		private Lift lift;
 
 		private LiftWrapper(Lift lift) {

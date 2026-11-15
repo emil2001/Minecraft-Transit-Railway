@@ -88,6 +88,16 @@ public class RenderLifts implements IGui {
 
 			// Calculating vehicle transformations in advance
 			final PositionAndRotation absolutePositionAndRotation = getLiftPositionAndRotation(clientWorld, lift);
+			if (!OptimizedRenderer.renderingShadows()) {
+				final Position floorPosition = lift.getCurrentFloor().getPosition();
+				final BlockEntity floorBlock = clientWorld.getBlockEntity(Init.newBlockPos(floorPosition.getX(), floorPosition.getY(), floorPosition.getZ()));
+				final boolean shouldDing = floorBlock != null && floorBlock.data instanceof BlockLiftTrackFloor.BlockEntity && ((BlockLiftTrackFloor.BlockEntity) floorBlock.data).getShouldDing();
+				final Vector soundPosition = new Vector(absolutePositionAndRotation.position.x + .5, absolutePositionAndRotation.position.y + lift.getHeight() / 2, absolutePositionAndRotation.position.z + .5);
+				final double dx = soundPosition.x - cameraPosition.getXMapped();
+				final double dy = soundPosition.y - cameraPosition.getYMapped();
+				final double dz = soundPosition.z - cameraPosition.getZMapped();
+				liftWrapper.sound.tick(lift, soundPosition, shouldDing, dx * dx + dy * dy + dz * dz <= 256);
+			}
 			cullingTasks.add(occlusionCullingInstance -> {
 				final double longestDimension = Math.max(lift.getHeight(), Math.max(lift.getWidth(), lift.getDepth()));
 				final boolean shouldRender = occlusionCullingInstance.isAABBVisible(new Vec3d(

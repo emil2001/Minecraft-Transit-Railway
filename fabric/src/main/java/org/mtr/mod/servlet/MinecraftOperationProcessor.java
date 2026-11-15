@@ -11,6 +11,8 @@ import org.mtr.mapping.holder.ServerWorld;
 import org.mtr.mod.Init;
 import org.mtr.mod.packet.PacketUpdateData;
 import org.mtr.mod.packet.PacketUpdateVehiclesLifts;
+import org.mtr.mod.item.ItemLiftRefresher;
+import org.mtr.gtnh.RidingPermissions;
 
 public final class MinecraftOperationProcessor {
 
@@ -22,6 +24,8 @@ public final class MinecraftOperationProcessor {
 					if (playerEntity == null) {
 						queueObject.runCallback(new PlayerPresentResponse(""));
 					} else {
+						RidingPermissions.observe(serverWorld, (VehicleLiftResponse) queueObject.data,
+								(first, second) -> ItemLiftRefresher.findPath(new org.mtr.mapping.holder.World(serverWorld.data), first, second));
 						Init.REGISTRY.sendPacketToClient(ServerPlayerEntity.cast(playerEntity), new PacketUpdateVehiclesLifts((VehicleLiftResponse) queueObject.data));
 						queueObject.runCallback(new PlayerPresentResponse(dimension));
 					}

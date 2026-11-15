@@ -35,7 +35,9 @@ public final class ClientServlet extends HttpServlet {
 				endpoint,
 				content,
 				(response, path) -> {
-					if (path.equals(endpoint)) {
+					if (path.isEmpty()) {
+						ServletBase.sendResponse(httpServletResponse, asyncContext, response, "text/plain", HttpResponseStatus.INTERNAL_SERVER_ERROR);
+					} else if (path.equals(endpoint)) {
 						ServletBase.sendResponse(httpServletResponse, asyncContext, response, ServletBase.getMimeType(endpoint.equals("/") ? "html" : endpoint), HttpResponseStatus.OK);
 					} else {
 						ServletBase.sendResponse(httpServletResponse, asyncContext, path, "", HttpResponseStatus.REDIRECT);
