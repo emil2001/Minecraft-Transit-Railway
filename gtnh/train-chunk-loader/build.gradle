@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'com.gtnewhorizons.retrofuturagradle' version '1.4.9'
+}
+
+group = 'org.mtr'
+version = '0.1.0'
+
+repositories { mavenCentral() }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+compileJava.options.release = 8
+compileTestJava.options.release = 8
+tasks.named('decompileSrgJar') {
+    java17Launcher.set(javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) })
+}
+minecraft {
+    mcVersion.set('1.7.10')
+    mcpMappingChannel.set('stable')
+    mcpMappingVersion.set('12')
+}
+
+dependencies {
+    // Built by the GTNH productionBuild task. Keep MTR out of the add-on JAR.
+    def mtr = files(providers.gradleProperty('mtrJar').getOrElse(
+        '../../../mappings/forge/1.7.10-mapping/build/libs/MTR-GTNH-4.0.5-gtnh.20-dev-all.jar'))
+    compileOnly mtr
+    testImplementation mtr
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+test {
+    useJUnitPlatform()
+    workingDir = layout.buildDirectory.dir('test-run').get().asFile
+    doFirst { workingDir.mkdirs() }
+}
+
+jar {
+    manifest.attributes(
+        'FMLCorePlugin': 'org.mtr.chunkloader.launch.ChunkLoadingPlugin',
+        'FMLCorePluginContainsFMLMod': 'true'
+    )
+}
