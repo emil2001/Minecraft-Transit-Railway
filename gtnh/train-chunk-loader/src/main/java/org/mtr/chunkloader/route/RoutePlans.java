@@ -173,14 +173,16 @@ public final class RoutePlans {
         for (; index < path.size(); index++) {
             PathData rail = path.get(index);
             double railStart = rail.getStartDistance();
-            double stop = Math.min(end, rail.getEndDistance());
-            if (!Double.isFinite(railStart) || !(railStart <= start && start <= stop)) return false;
+            double nextStart = index + 1 < path.size() ? path.get(index + 1).getStartDistance() : Double.POSITIVE_INFINITY;
+            if (nextStart == start) continue; // A later rail owns this progress, even for zero-length records.
+            double stop = Math.min(end, nextStart);
+            if (!Double.isFinite(railStart) || !(railStart <= start && start <= stop && stop <= rail.getEndDistance())) return false;
             try {
                 if (!sampleRail(rail, start - railStart, stop - railStart, chunks)) return false;
             } catch (RuntimeException invalidRail) {
                 return false;
             }
-            if (stop == end) return true;
+            if (end < nextStart) return true;
             start = stop;
         }
         return false;

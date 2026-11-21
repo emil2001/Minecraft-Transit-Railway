@@ -72,8 +72,13 @@ class RoutePlansTest {
                 return new Vector(80.5 + distance, 64, 8.5);
             }
         };
-        assertEquals(Arrays.asList(chunk(0, 2), chunk(1, 2), chunk(5, 0)), new ArrayList<>(
-                RoutePlans.chunksAhead(Arrays.asList(curve, next), 0, 0.08, 0, 0, next.getEndDistance())));
+        PathData inactive = new PathData(base, Math.PI, Math.PI) {
+            @Override public Vector getPosition(double distance) { throw new AssertionError("Zero-duration rail"); }
+        };
+        List<PathData> path = Arrays.asList(curve, inactive, next);
+        List<Long> expected = Arrays.asList(chunk(0, 2), chunk(1, 2), chunk(5, 0));
+        assertEquals(expected, new ArrayList<>(RoutePlans.chunksAhead(path, 0, 0.08, 0, 0, next.getEndDistance())));
+        assertEquals(expected, new ArrayList<>(RoutePlans.chunksAhead(path, 0, 0.08, 0, 0, next.getStartDistance())));
     }
 
     @Test void aStraightRailOnAChunkEdgeStaysInItsRowWithOnePositionReadPerStep() {
