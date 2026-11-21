@@ -222,6 +222,12 @@ public final class RoutePlans {
         // if an endpoint can still reach a new candidate on the other side of a chunk boundary.
         boolean jump = dx * dx + dz * dz > reach * reach;
         boolean collect = span <= (jump ? GEOMETRY_EPSILON : MIN_INTERVAL);
+        if (jump && collect) {
+            coverReach(from, reach, first, last, chunks, true);
+            chunks.add(last); // The observed landing precedes unresolved neighbours of that landing.
+            coverReach(to, reach, first, last, chunks, true);
+            return true;
+        }
         if (!coverReach(from, reach, first, last, chunks, collect) || !coverReach(to, reach, first, last, chunks, collect)) {
             double middle = start + span / 2;
             if (middle <= start || middle >= end) {

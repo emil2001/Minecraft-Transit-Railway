@@ -134,6 +134,23 @@ class RoutePlansTest {
                 chunks.subList(beforeJump, beforeJump + 3));
     }
 
+    @Test void keepsAnObservedLandingAheadOfItsUnresolvedNeighbourAtTheRefinementLimit() {
+        Position start = new Position(101, 64, 126), end = new Position(64, 64, 161);
+        Rail rail = Rail.newRail(start, Angle.N, end, Angle.N, Rail.Shape.QUADRATIC, 0,
+                new ObjectArrayList<>(), 300, 300, false, false, true, false, false, TransportMode.TRAIN);
+        PathData raw = new PathData(rail, 0, 0, 0, start, end);
+        PathData path = new PathData(raw, 0, raw.getRailLength());
+        // The jump lands just above z=144. The rail crosses below it about 0.00001 blocks later.
+        assertTrue(path.getPosition(102.20019).z > 144);
+        assertTrue(path.getPosition(102.20020).z < 144);
+        List<Long> chunks = new ArrayList<>(RoutePlans.chunksAhead(
+                Collections.singletonList(path), 0, 0.08, 0, 0, path.getEndDistance()));
+        int beforeJump = chunks.indexOf(chunk(6, 8));
+        assertTrue(beforeJump >= 0);
+        assertEquals(Arrays.asList(chunk(6, 8), chunk(5, 9), chunk(5, 8)),
+                chunks.subList(beforeJump, beforeJump + 3));
+    }
+
     @Test void sameVehicleIdOnAnotherSidingReplacesThePlanImmediately() {
         Simulator simulator = start();
         observe(train(simulator, TransportMode.TRAIN, 0), simulator, 0.08);
