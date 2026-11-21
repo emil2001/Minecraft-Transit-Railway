@@ -110,7 +110,7 @@ public final class ChunkPrefetcher {
 
         boolean healthy = hasHeadroom.getAsBoolean();
         if (pending != null) {
-            if (!healthy || !wanted(routes, pendingChunk)) cancelPending();
+            if (!healthy || !wanted(routes, pendingChunk) || loadedChunk.apply(pendingChunk) != null) cancelPending();
             else if (pending.isDone()) pending = null;
         }
         retainForward(routes);

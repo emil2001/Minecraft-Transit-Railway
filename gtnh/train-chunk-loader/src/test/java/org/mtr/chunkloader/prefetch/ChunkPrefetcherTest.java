@@ -112,6 +112,19 @@ class ChunkPrefetcherTest {
         assertTrue(noReader.ready(10).isEmpty());
     }
 
+    @Test void aChunkLoadedWhileItsReadIsQueuedReleasesTheWorkerForTheNextColdChunk() {
+        routes.put(10L, Arrays.asList(7L, 8L));
+        prefetch.tick(routes);
+        Runnable queued = disk.getQueue().element();
+        resident.put(7L, new Chunk(null, 7, 0));
+        prefetch.tick(routes);
+        assertTrue(disk.getQueue().isEmpty());
+        queued.run();
+        prefetch.tick(routes);
+        disk.getQueue().remove().run();
+        assertEquals(Collections.singletonList(8L), reads);
+    }
+
     @Test void boundsWorldAdmissionsAndCleansUpRoutesDuringLag() {
         for (long train = 100; train < 150; train++) {
             routes.put(train, Collections.singleton(train));

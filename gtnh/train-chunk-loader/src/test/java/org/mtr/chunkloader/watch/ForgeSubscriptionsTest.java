@@ -16,10 +16,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,17 +38,7 @@ class ForgeSubscriptionsTest {
         EntityPlayerMP rider = allocate(EntityPlayerMP.class), pedestrian = allocate(EntityPlayerMP.class);
         rider.worldObj = pedestrian.worldObj = world;
 
-        // The test's Forge classes run without LaunchWrapper. Seed a stationary view that the
-        // runtime hooks installed at radius four, then exercise the normal tick and resize paths.
-        PassengerView view = allocate(PassengerView.class);
-        set(PassengerView.class, view, "manager", manager);
-        set(PassengerView.class, view, "window", new WatchWindow(0, 0, 4));
-        set(PassengerView.class, view, "watches", new ForgeSubscriptions(manager, rider));
-        Field registry = PassengerView.class.getDeclaredField("ACTIVE");
-        registry.setAccessible(true);
-        @SuppressWarnings("unchecked") Map<EntityPlayerMP, PassengerView> active =
-                (Map<EntityPlayerMP, PassengerView>) registry.get(null);
-        active.put(rider, view);
+        installView(manager, rider, 0, 4);
         try {
             PassengerView.update(rider, true, Collections.emptyList());
             assertEquals(4, PassengerView.activeChunkRadius(12, rider));
@@ -64,6 +56,50 @@ class ForgeSubscriptionsTest {
         } finally {
             PassengerView.forget(manager, rider);
         }
+    }
+
+    @Test void trainKeepsForwardChunksUntilTheSecondPassengersWiderWindowOpens() throws Exception {
+        TestWorld world = allocate(TestWorld.class);
+        PlayerManager manager = allocate(PlayerManager.class);
+        set(WorldServer.class, world, "thePlayerManager", manager);
+        set(PlayerManager.class, manager, "theWorldServer", world);
+        set(PlayerManager.class, manager, "playerViewRadius", 12);
+        EntityPlayerMP rear = allocate(EntityPlayerMP.class), front = allocate(EntityPlayerMP.class);
+        rear.worldObj = front.worldObj = world;
+        front.posX = 32;
+        installView(manager, rear, 0, 4);
+        installView(manager, front, 2, 4);
+        try {
+            for (int tick = 0; tick < 19; tick++) {
+                PassengerView.update(rear, true, Collections.emptyList());
+                PassengerView.update(front, true, Collections.emptyList());
+                List<Long> ahead = new ArrayList<>(Arrays.asList(6L, 7L, 8L));
+                PassengerView.excludePlayerWindow(rear, ahead);
+                PassengerView.excludePlayerWindow(front, ahead);
+                assertEquals(Arrays.asList(7L, 8L), ahead);
+            }
+            installView(manager, front, 2, 5);
+            List<Long> ahead = new ArrayList<>(Arrays.asList(6L, 7L, 8L));
+            PassengerView.excludePlayerWindow(rear, ahead);
+            PassengerView.excludePlayerWindow(front, ahead);
+            assertEquals(Collections.singletonList(8L), ahead);
+        } finally {
+            PassengerView.forget(manager, rear);
+            PassengerView.forget(manager, front);
+        }
+    }
+
+    // The Forge test classes run without LaunchWrapper. Seed the window normally installed on boarding.
+    private static void installView(PlayerManager manager, EntityPlayerMP player, int centerX, int radius) throws Exception {
+        PassengerView view = allocate(PassengerView.class);
+        set(PassengerView.class, view, "manager", manager);
+        set(PassengerView.class, view, "window", new WatchWindow(centerX, 0, radius));
+        set(PassengerView.class, view, "watches", new ForgeSubscriptions(manager, player));
+        Field registry = PassengerView.class.getDeclaredField("ACTIVE");
+        registry.setAccessible(true);
+        @SuppressWarnings("unchecked") Map<EntityPlayerMP, PassengerView> active =
+                (Map<EntityPlayerMP, PassengerView>) registry.get(null);
+        active.put(player, view);
     }
 
     @Test void rechecksLagAndResidencyBeforeCallingTheNativeWatcherConstructor() throws Exception {

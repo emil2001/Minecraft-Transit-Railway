@@ -44,11 +44,15 @@ public final class PassengerView {
 
     public static void excludePlayerWindow(EntityPlayerMP player, List<Long> candidates) {
         if (candidates.isEmpty()) return;
-        if (!supported()) {
+        PassengerView view = ACTIVE.get(player);
+        if (view == null && !supported()) {
             candidates.clear();
             return;
         }
-        int radius = Math.min(WatchWindow.TRAIN_RADIUS, ForgeSubscriptions.radius(player.getServerForPlayer().getPlayerManager()));
+        PlayerManager manager = player.getServerForPlayer().getPlayerManager();
+        int radius = Math.min(WatchWindow.TRAIN_RADIUS, ForgeSubscriptions.radius(manager));
+        // A server distance increase opens one ring at a time. Keep forward watches until that ring opens.
+        if (view != null && view.manager == manager) radius = Math.min(radius, view.window.radius());
         WatchWindow.excludeSquare(candidates, chunk(player.posX), chunk(player.posZ), radius);
     }
 
