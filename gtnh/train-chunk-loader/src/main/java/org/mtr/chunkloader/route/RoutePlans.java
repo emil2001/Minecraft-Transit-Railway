@@ -30,6 +30,8 @@ public final class RoutePlans {
     private static final double EXIT_SPEED = 33.0 / 3600;
     private static final int MAX_AHEAD = 256;
     private static final int SAMPLE_DISTANCE = 4;
+    private static final double MIN_INTERVAL = 0.0625;
+    private static final double GEOMETRY_EPSILON = 0.00001;
     private static final long SAMPLE_INTERVAL = TimeUnit.MILLISECONDS.toNanos(200);
     private static final long MAX_AGE = TimeUnit.SECONDS.toNanos(2);
     private static final ConcurrentMap<String, Session> SESSIONS = new ConcurrentHashMap<>();
@@ -40,7 +42,7 @@ public final class RoutePlans {
     public static final class Plan {
         public final long id;
         public final Set<UUID> passengers;
-        /** First visit to each sampled rail chunk, starting at the train's leading end. Low 32 bits X, high 32 bits Z. */
+        /** Rail chunks in forward order, including possible grazes at boundaries. Low 32 bits X, high 32 bits Z. */
         public final List<Long> chunks;
         private final long sampledAt, sidingId;
         // Identity only. All reads of simulator-owned state stay on its own thread.
@@ -147,8 +149,8 @@ public final class RoutePlans {
         session.plans.put(id, new Plan(session.simulator, sidingId, id, riders.ids, chunks, now));
     }
 
-    private static Set<Long> chunksAhead(List<PathData> path, double progress, double speed,
-                                         int repeatIndex, int repeatLimit, double routeEnd) {
+    static Set<Long> chunksAhead(List<PathData> path, double progress, double speed,
+                                 int repeatIndex, int repeatLimit, double routeEnd) {
         // Repeating routes end with a dummy segment at the world origin. It has no traversable rail.
         if (repeatLimit > 0 && repeatLimit < path.size()) path = path.subList(0, repeatLimit);
         if (path.isEmpty() || !Double.isFinite(routeEnd)) return Collections.emptySet();
@@ -167,26 +169,96 @@ public final class RoutePlans {
         if (!Double.isFinite(start) || !(end >= start) || end - start > MAX_AHEAD + 1) return false;
         int index = Utilities.getIndexFromConditionalList(path, start);
         if (index < 0) return false;
-        // Rail progress increases for reversed consists too. PathData handles reversed rails and their curves.
-        int steps = (int) Math.ceil((end - start) / SAMPLE_DISTANCE);
-        for (int step = 0; step <= steps; step++) {
-            double distance = Math.min(start + step * (double) SAMPLE_DISTANCE, end);
-            if (index + 1 < path.size() && path.get(index + 1).getStartDistance() <= distance) {
-                index = Utilities.getIndexFromConditionalList(path, distance);
-            }
+        // Start fresh on every rail, including rails shorter than a step and discontinuous route joins.
+        for (; index < path.size(); index++) {
             PathData rail = path.get(index);
-            if (!(distance <= rail.getEndDistance())) return false;
-            Vector point;
+            double railStart = rail.getStartDistance();
+            double stop = Math.min(end, rail.getEndDistance());
+            if (!Double.isFinite(railStart) || !(railStart <= start && start <= stop)) return false;
             try {
-                point = rail.getPosition(distance - rail.getStartDistance());
+                if (!sampleRail(rail, start - railStart, stop - railStart, chunks)) return false;
             } catch (RuntimeException invalidRail) {
                 return false;
             }
-            if (point == null || !Double.isFinite(point.x) || !Double.isFinite(point.z)) return false;
-            int x = (int) Math.floor(point.x / 16);
-            int z = (int) Math.floor(point.z / 16);
-            chunks.add(((long) z << 32) | (x & 0xffffffffL));
+            if (stop == end) return true;
+            start = stop;
+        }
+        return false;
+    }
+
+    private static boolean sampleRail(PathData rail, double start, double end, Set<Long> chunks) {
+        Vector from = rail.getPosition(start);
+        if (!valid(from)) return false;
+        chunks.add(chunk(chunkIndex(from.x), chunkIndex(from.z)));
+        int steps = (int) Math.ceil((end - start) / SAMPLE_DISTANCE);
+        double distance = start;
+        for (int step = 1; step <= steps; step++) {
+            double next = Math.min(start + step * (double) SAMPLE_DISTANCE, end);
+            Vector to = rail.getPosition(next);
+            if (!valid(to) || !coverInterval(rail, distance, from, next, to, chunks)) return false;
+            from = to;
+            distance = next;
         }
         return true;
     }
+
+    private static boolean coverInterval(PathData rail, double start, Vector from, double end, Vector to, Set<Long> chunks) {
+        double span = end - start;
+        double dx = to.x - from.x, dz = to.z - from.z;
+        long last = chunk(chunkIndex(to.x), chunkIndex(to.z));
+        // Travelling the entire distance on one axis leaves no distance for a lateral excursion.
+        if ((dx == 0 && Math.abs(dz) == span) || (dz == 0 && Math.abs(dx) == span)) {
+            chunks.add(last);
+            return true;
+        }
+
+        // RailMath joins at most two horizontal arcs/lines. At its internal join some valid rails
+        // jump. Every position on either side is within one interval's travel of its own endpoint.
+        long first = chunk(chunkIndex(from.x), chunkIndex(from.z));
+        double reach = span + GEOMETRY_EPSILON;
+        boolean collect = span <= MIN_INTERVAL;
+        if (!coverReach(from, reach, first, last, chunks, collect) || !coverReach(to, reach, first, last, chunks, collect)) {
+            double middle = start + span / 2;
+            if (middle <= start || middle >= end) return false;
+            Vector point = rail.getPosition(middle);
+            return valid(point) && coverInterval(rail, start, from, middle, point, chunks)
+                    && coverInterval(rail, middle, point, end, to, chunks);
+        }
+        chunks.add(last);
+        return true;
+    }
+
+    // Check the endpoint's reach, adding previously unseen candidates only at the refinement limit.
+    private static boolean coverReach(Vector point, double reach, long first, long last, Set<Long> chunks, boolean collect) {
+        int x = chunkIndex(point.x), z = chunkIndex(point.z);
+        int sideX = chunkIndex(point.x - reach), sideZ = chunkIndex(point.z - reach);
+        if (sideX == x) sideX = chunkIndex(point.x + reach);
+        if (sideZ == z) sideZ = chunkIndex(point.z + reach);
+        // A four-block reach can cross at most one boundary per axis. Visit the side cells before
+        // the diagonal one, including Minecraft's floor-selected chunk on an exact corner crossing.
+        if (sideX != x && !candidate(chunk(sideX, z), first, last, chunks, collect)) return false;
+        if (sideZ != z && !candidate(chunk(x, sideZ), first, last, chunks, collect)) return false;
+        if (sideX != x && sideZ != z) {
+            double dx = 16.0 * Math.max(x, sideX) - point.x;
+            double dz = 16.0 * Math.max(z, sideZ) - point.z;
+            if (dx * dx + dz * dz <= reach * reach)
+                return candidate(chunk(sideX, sideZ), first, last, chunks, collect);
+        }
+        return true;
+    }
+
+    private static boolean candidate(long key, long first, long last, Set<Long> chunks, boolean collect) {
+        if (key == first || key == last || chunks.contains(key)) return true;
+        if (!collect) return false;
+        chunks.add(key);
+        return true;
+    }
+
+    private static boolean valid(Vector point) {
+        return point != null && Double.isFinite(point.x) && Double.isFinite(point.z);
+    }
+
+    private static int chunkIndex(double coordinate) { return (int) Math.floor(coordinate / 16); }
+
+    private static long chunk(long x, long z) { return (z << 32) | (x & 0xffffffffL); }
 }
