@@ -21,6 +21,8 @@ import org.mtr.libraries.com.google.gson.JsonObject;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +46,11 @@ class RoutePlansTest {
         assertEquals(Collections.singleton(RIDER), plan.passengers);
         assertEquals(chunk(-10, 0), plan.chunks.get(0).longValue());
         assertTrue(plan.chunks.contains(chunk(-9, 5)), "The middle of this quarter-turn leaves the diagonal chord");
+        // The arc enters (-7,8) for just 0.20 blocks between the ordinary samples at 144 and 148.
+        int beforeCorner = plan.chunks.indexOf(chunk(-7, 7));
+        assertTrue(beforeCorner >= 0);
+        assertEquals(Arrays.asList(chunk(-7, 7), chunk(-7, 8), chunk(-6, 8)),
+                plan.chunks.subList(beforeCorner, beforeCorner + 3));
         assertFalse(plan.chunks.contains(chunk(-6, 4)));
         assertEquals(chunk(0, 10), plan.chunks.get(plan.chunks.size() - 1).longValue());
         assertThrows(UnsupportedOperationException.class, plan.chunks::clear);
@@ -51,6 +58,60 @@ class RoutePlansTest {
 
         RoutePlans.observe(train, simulator, 240, 0.08, 0, 0, 251.32743026687666);
         assertSame(plan, RoutePlans.current(DIMENSION).get(0), "Repeated frames reuse the route geometry");
+    }
+
+    @Test void coversAnExcursionOnAShortRailWithoutBridgingADiscontinuousJoin() {
+        PathData base = new PathData(new JsonReader(new JsonObject()));
+        PathData curve = new PathData(base, 0, Math.PI) {
+            @Override public Vector getPosition(double distance) {
+                return new Vector(15.8 + Math.sin(distance), 64, 34.5 + Math.cos(distance));
+            }
+        };
+        PathData next = new PathData(base, Math.PI, Math.PI + 0.5) {
+            @Override public Vector getPosition(double distance) {
+                return new Vector(80.5 + distance, 64, 8.5);
+            }
+        };
+        assertEquals(Arrays.asList(chunk(0, 2), chunk(1, 2), chunk(5, 0)), new ArrayList<>(
+                RoutePlans.chunksAhead(Arrays.asList(curve, next), 0, 0.08, 0, 0, next.getEndDistance())));
+    }
+
+    @Test void aStraightRailOnAChunkEdgeStaysInItsRowWithOnePositionReadPerStep() {
+        int[] positionReads = {0};
+        PathData base = new PathData(new JsonReader(new JsonObject()));
+        PathData edge = new PathData(base, 0, 64) {
+            @Override public Vector getPosition(double distance) {
+                positionReads[0]++;
+                return new Vector(16, 64, distance);
+            }
+        };
+        assertEquals(Arrays.asList(chunk(1, 0), chunk(1, 1), chunk(1, 2), chunk(1, 3), chunk(1, 4)),
+                new ArrayList<>(RoutePlans.chunksAhead(Collections.singletonList(edge), 0, 0.08, 0, 0, 64)));
+        assertEquals(17, positionReads[0]);
+    }
+
+    @Test void includesTheChunkOwnedByTheExactCornerOnAnUncachedRail() {
+        double length = Math.hypot(32, 32);
+        PathData edge = new PathData(null, 0, 0, 0, 0, length,
+                new Position(0, 64, 31), Angle.E, new Position(32, 64, -1), Angle.W);
+        List<Long> chunks = new ArrayList<>(RoutePlans.chunksAhead(
+                Collections.singletonList(edge), 0, 0.08, 0, 0, length));
+        // The fallback straight line passes from (0,1) to (1,0) through (16,16), which belongs to (1,1).
+        assertEquals(chunk(0, 1), chunks.get(0).longValue());
+        int corner = chunks.indexOf(chunk(1, 1));
+        assertTrue(corner > 0 && corner < chunks.indexOf(chunk(1, 0)));
+        assertEquals(chunk(2, -1), chunks.get(chunks.size() - 1).longValue());
+    }
+
+    @Test void keepsBothSidesOfAnInternalMtrCurveJumpWithoutConnectingThem() {
+        Position start = new Position(102, 64, 124), end = new Position(2, 64, 168);
+        Rail rail = Rail.newRail(start, Angle.SSE, end, Angle.SSE, Rail.Shape.QUADRATIC, 0,
+                new ObjectArrayList<>(), 300, 300, false, false, true, false, false, TransportMode.TRAIN);
+        PathData raw = new PathData(rail, 0, 0, 0, start, end);
+        PathData path = new PathData(raw, 0, raw.getRailLength());
+        // RailMath jumps 54 blocks between its two arcs near progress 171.26.
+        assertEquals(Arrays.asList(chunk(6, 7), chunk(3, 9)), new ArrayList<>(
+                RoutePlans.chunksAhead(Collections.singletonList(path), 171.25, 0.08, 0, 0, 171.27)));
     }
 
     @Test void sameVehicleIdOnAnotherSidingReplacesThePlanImmediately() {
