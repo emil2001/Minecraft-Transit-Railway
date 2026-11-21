@@ -158,7 +158,7 @@ public final class RoutePlans {
         double ahead = Math.min(MAX_AHEAD, 128 + 3000 * speed);
         Set<Long> chunks = new LinkedHashSet<>();
         if (!sample(path, progress, Math.min(progress + ahead, end), chunks)) return Collections.emptySet();
-        if (repeatLimit > 0 && progress <= end && progress + ahead > end && repeatIndex >= 0 && repeatIndex < path.size()) {
+        if (repeatLimit > 0 && progress <= end && progress + ahead >= end && repeatIndex >= 0 && repeatIndex < path.size()) {
             double restart = path.get(repeatIndex).getStartDistance();
             if (!sample(path, restart, Math.min(end, restart + (progress + ahead - end)), chunks)) return Collections.emptySet();
         }
@@ -218,10 +218,16 @@ public final class RoutePlans {
         // jump. Every position on either side is within one interval's travel of its own endpoint.
         long first = chunk(chunkIndex(from.x), chunkIndex(from.z));
         double reach = span + GEOMETRY_EPSILON;
-        boolean collect = span <= MIN_INTERVAL;
+        // At a jump the landing chunk precedes any later neighbour. Localize that jump further
+        // if an endpoint can still reach a new candidate on the other side of a chunk boundary.
+        boolean jump = dx * dx + dz * dz > reach * reach;
+        boolean collect = span <= (jump ? GEOMETRY_EPSILON : MIN_INTERVAL);
         if (!coverReach(from, reach, first, last, chunks, collect) || !coverReach(to, reach, first, last, chunks, collect)) {
             double middle = start + span / 2;
-            if (middle <= start || middle >= end) return false;
+            if (middle <= start || middle >= end) {
+                chunks.add(last); // No representable rail position remains between the endpoints.
+                return true;
+            }
             Vector point = rail.getPosition(middle);
             return valid(point) && coverInterval(rail, start, from, middle, point, chunks)
                     && coverInterval(rail, middle, point, end, to, chunks);

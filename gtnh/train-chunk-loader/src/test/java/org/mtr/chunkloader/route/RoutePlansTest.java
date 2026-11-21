@@ -119,6 +119,21 @@ class RoutePlansTest {
                 RoutePlans.chunksAhead(Collections.singletonList(path), 171.25, 0.08, 0, 0, 171.27)));
     }
 
+    @Test void visitsTheLandingChunkBeforeItsNeighbourAfterAnInternalJump() {
+        Position start = new Position(6, 32, -41), end = new Position(13, 22, -70);
+        Rail rail = Rail.newRail(start, Angle.NW, end, Angle.NW, Rail.Shape.TWO_RADII, 0,
+                new ObjectArrayList<>(), 300, 300, false, false, true, false, false, TransportMode.TRAIN);
+        PathData raw = new PathData(rail, 0, 0, 0, start, end);
+        PathData path = new PathData(raw, 0, raw.getRailLength());
+        // RailMath jumps into (0,-5), then crosses x=16 at progress 17.8979.
+        List<Long> chunks = new ArrayList<>(RoutePlans.chunksAhead(
+                Collections.singletonList(path), 7.383503861946, 0.08, 0, 0, path.getEndDistance()));
+        int beforeJump = chunks.indexOf(chunk(0, -4));
+        assertTrue(beforeJump >= 0);
+        assertEquals(Arrays.asList(chunk(0, -4), chunk(0, -5), chunk(1, -5)),
+                chunks.subList(beforeJump, beforeJump + 3));
+    }
+
     @Test void sameVehicleIdOnAnotherSidingReplacesThePlanImmediately() {
         Simulator simulator = start();
         observe(train(simulator, TransportMode.TRAIN, 0), simulator, 0.08);
@@ -197,6 +212,17 @@ class RoutePlansTest {
         assertEquals(chunk(0, 10), chunks.get(1).longValue(), "Sample the real rail endpoint before the loop sentinel");
         assertFalse(chunks.contains(chunk(0, 0)), "The sentinel is outside the route");
         assertTrue(chunks.indexOf(chunk(-9, 5)) > 1);
+    }
+
+    @Test void includesTheRestartPointWhenTheLookaheadEndsExactlyAtTheWrap() {
+        List<PathData> path = train(start(), TransportMode.TRAIN, 0, true).vehicleExtraData.immutablePath;
+        double end = path.get(0).getEndDistance();
+        double ahead = 158; // 128 blocks plus three seconds at 0.01 blocks per millisecond.
+        assertFalse(RoutePlans.chunksAhead(path, Math.nextDown(end) - ahead, 0.01, 0, 1, end)
+                .contains(chunk(-10, 0)));
+        List<Long> chunks = new ArrayList<>(RoutePlans.chunksAhead(path, end - ahead, 0.01, 0, 1, end));
+        assertEquals(chunk(0, 10), chunks.get(chunks.size() - 2).longValue());
+        assertEquals(chunk(-10, 0), chunks.get(chunks.size() - 1).longValue());
     }
 
     @Test void oldSimulatorsCannotRepopulateAReplacedUnloadedOrStoppedWorld() {
