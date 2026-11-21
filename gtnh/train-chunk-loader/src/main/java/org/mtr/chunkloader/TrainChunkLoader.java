@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Mod(modid = "mtrtrainchunkloader", name = "MTR Train Chunk Loader", version = "0.1.0",
+@Mod(modid = "mtrtrainchunkloader", name = "MTR Train Chunk Loader", version = "0.1.1",
         acceptedMinecraftVersions = "[1.7.10]", dependencies = "required-after:mtr", acceptableRemoteVersions = "*")
 public final class TrainChunkLoader {
     private final Map<WorldServer, WorldRoutes> worlds = new IdentityHashMap<>();
@@ -72,7 +72,8 @@ public final class TrainChunkLoader {
     private static final class WorldRoutes {
         final String dimension;
         final ChunkPrefetcher prefetch;
-        final Map<UUID, RoutePlans.Plan> riders = new HashMap<>();
+        final Map<UUID, EntityPlayerMP> online = new HashMap<>();
+        final Map<EntityPlayerMP, RoutePlans.Plan> rides = new IdentityHashMap<>();
         final Map<Long, List<Long>> occupied = new LinkedHashMap<>();
         final Map<Long, EntityPlayerMP> leadWatchers = new HashMap<>();
 
@@ -83,33 +84,34 @@ public final class TrainChunkLoader {
         }
 
         void update(WorldServer world) {
-            riders.clear();
+            online.clear();
+            rides.clear();
             occupied.clear();
             leadWatchers.clear();
-            for (RoutePlans.Plan plan : RoutePlans.current(dimension)) {
-                for (UUID rider : plan.passengers) riders.put(rider, plan);
-            }
-            if (!riders.isEmpty()) {
+            List<RoutePlans.Plan> plans = RoutePlans.current(dimension);
+            if (!plans.isEmpty()) {
                 for (Object entry : world.playerEntities) {
-                    if (!(entry instanceof EntityPlayerMP)) continue;
-                    EntityPlayerMP player = (EntityPlayerMP) entry;
-                    RoutePlans.Plan plan = player.isDead ? null : riders.get(player.getUniqueID());
-                    if (plan != null) {
+                    if (entry instanceof EntityPlayerMP) {
+                        EntityPlayerMP player = (EntityPlayerMP) entry;
+                        if (!player.isDead) online.put(player.getUniqueID(), player);
+                    }
+                }
+                for (RoutePlans.Plan plan : plans) {
+                    for (UUID uuid : plan.passengers) {
+                        EntityPlayerMP player = online.get(uuid);
+                        if (player == null || !plan.authorizes(player, world)) continue;
+                        rides.put(player, plan);
                         leadWatchers.merge(plan.id, player, (a, b) -> a.getUniqueID().compareTo(b.getUniqueID()) <= 0 ? a : b);
                     }
                 }
             }
-            leadWatchers.forEach((id, player) -> {
-                List<Long> path = riders.get(player.getUniqueID()).chunks;
-                occupied.put(id, PassengerView.aheadOfView(player, path));
-            });
+            leadWatchers.forEach((id, player) ->
+                    occupied.put(id, PassengerView.aheadOfView(player, rides.get(player).chunks)));
             prefetch.tick(occupied);
-            // A single native watcher per train keeps the corridor loaded for every passenger.
             for (Object entry : world.playerEntities) {
                 if (!(entry instanceof EntityPlayerMP)) continue;
                 EntityPlayerMP player = (EntityPlayerMP) entry;
-                UUID uuid = player.getUniqueID();
-                RoutePlans.Plan plan = player.isDead ? null : riders.get(uuid);
+                RoutePlans.Plan plan = rides.get(player);
                 List<Long> ahead = plan != null && player == leadWatchers.get(plan.id)
                         ? prefetch.ready(plan.id) : Collections.emptyList();
                 PassengerView.update(player, plan != null, ahead);

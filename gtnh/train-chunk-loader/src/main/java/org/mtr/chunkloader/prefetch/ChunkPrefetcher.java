@@ -6,23 +6,26 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.LongConsumer;
 import java.util.function.LongPredicate;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.chunk.storage.IChunkLoader;
+import net.minecraft.world.gen.ChunkProviderServer;
 
 /** Per-dimension read-ahead. Only the file reader leaves the server thread. */
 public final class ChunkPrefetcher {
@@ -40,37 +43,41 @@ public final class ChunkPrefetcher {
                 return thread;
             });
 
-    private final LongPredicate loaded;
+    private final LongPredicate resident;
     private final BooleanSupplier hasHeadroom;
-    private final LongPredicate verify;
+    private final LongConsumer warm;
     private final ThreadPoolExecutor disk;
     private final Map<Long, Long> recent = new LinkedHashMap<>();
-    private final Map<Long, Long> confirmed = new HashMap<>();
     private final Map<Long, List<Long>> forward = new HashMap<>();
-    private FutureTask<Boolean> pending;
+    private FutureTask<Void> pending;
     private long pendingChunk, tick, nextAdmission;
     private int trainIndex;
     private boolean closed;
 
     public ChunkPrefetcher(WorldServer world) {
-        this(chunk -> world.theChunkProviderServer.chunkExists((int) chunk, (int) (chunk >> 32)),
+        this(chunk -> isPopulatedResident(world.theChunkProviderServer, chunk),
                 () -> serverHasHeadroom(world.func_73046_m()), reader(world.theChunkProviderServer.currentChunkLoader), DISK);
     }
 
-    ChunkPrefetcher(LongPredicate loaded, BooleanSupplier hasHeadroom, LongPredicate verify, ThreadPoolExecutor disk) {
-        this.loaded = loaded;
+    ChunkPrefetcher(LongPredicate resident, BooleanSupplier hasHeadroom, LongConsumer warm, ThreadPoolExecutor disk) {
+        this.resident = resident;
         this.hasHeadroom = hasHeadroom;
-        this.verify = verify;
+        this.warm = warm;
         this.disk = disk;
     }
 
-    private static LongPredicate reader(IChunkLoader loader) {
+    private static LongConsumer reader(IChunkLoader loader) {
         if (!(loader instanceof AnvilChunkLoader)) return null;
         Path directory = ((AnvilChunkLoader) loader).chunkSaveLocation.toPath().resolve("region");
-        return chunk -> AnvilReadAhead.isPopulated(directory, (int) chunk, (int) (chunk >> 32));
+        return chunk -> AnvilReadAhead.warm(directory, (int) chunk, (int) (chunk >> 32));
     }
 
-    private static boolean serverHasHeadroom(MinecraftServer server) {
+    public static boolean isPopulatedResident(ChunkProviderServer provider, long key) {
+        Chunk chunk = (Chunk) provider.loadedChunkHashMap.getValueByKey(key);
+        return chunk != null && chunk.isTerrainPopulated;
+    }
+
+    public static boolean serverHasHeadroom(MinecraftServer server) {
         long[] times = server.tickTimeArray;
         int index = Math.floorMod(server.getTickCounter() - 1, times.length);
         long recentTime = 0;
@@ -84,12 +91,11 @@ public final class ChunkPrefetcher {
     }
 
     public void tick(Map<Long, ? extends Collection<Long>> routes) {
-        if (closed || verify == null) return;
+        if (closed || warm == null) return;
         tick++;
         if (routes.isEmpty()) {
             if (pending != null) cancelPending();
             recent.clear();
-            confirmed.clear();
             forward.clear();
             trainIndex = 0;
             return;
@@ -98,70 +104,69 @@ public final class ChunkPrefetcher {
         boolean healthy = hasHeadroom.getAsBoolean();
         if (pending != null) {
             if (!healthy || !wanted(routes, pendingChunk)) cancelPending();
-            else if (pending.isDone()) finishPending();
+            else if (pending.isDone()) pending = null;
         }
-        updateForward(routes);
-        if (!healthy || pending != null || confirmed.size() >= MAX_FORWARD_PER_WORLD || tick < nextAdmission) return;
+        retainForward(routes);
+        if (!healthy || tick < nextAdmission) return;
         nextAdmission = tick + 2;
+        Set<Long> admitted = new HashSet<>();
+        forward.values().forEach(admitted::addAll);
         List<Long> trains = new ArrayList<>(routes.keySet());
         for (int i = 0; i < Math.min(trains.size(), MAX_TRAIN_CHECKS); i++) {
             trainIndex %= trains.size();
             long train = trains.get(trainIndex++);
-            if (ready(train).size() >= MAX_FORWARD_PER_TRAIN) continue;
-            int checks = 0;
-            for (long chunk : routes.get(train)) {
-                if (++checks > MAX_CHUNKS_PER_TRAIN) break;
+            if (advance(train, routes.get(train), admitted)) return;
+        }
+    }
+
+    private boolean advance(long train, Collection<Long> route, Set<Long> admitted) {
+        List<Long> previous = ready(train);
+        boolean selected = false;
+        boolean attemptedRead = false;
+        int checks = 0;
+        for (long chunk : route) {
+            if (++checks > MAX_CHUNKS_PER_TRAIN) break;
+            if (resident.test(chunk)) {
+                if (!selected && previous.size() < MAX_FORWARD_PER_TRAIN && !previous.contains(chunk)
+                        && (admitted.size() < MAX_FORWARD_PER_WORLD || admitted.contains(chunk))) {
+                    List<Long> next = new ArrayList<>(previous);
+                    next.add(chunk);
+                    forward.put(train, Collections.unmodifiableList(next));
+                    selected = true;
+                }
+            } else if (pending == null && !attemptedRead) {
                 Long last = recent.get(chunk);
-                if ((last == null || tick - last >= RETRY_TICKS) && !confirmed.containsKey(chunk) && !loaded.test(chunk)) {
+                if (last == null || tick - last >= RETRY_TICKS) {
                     submit(chunk);
-                    return;
+                    attemptedRead = true;
                 }
             }
+            if (selected && (attemptedRead || pending != null)) break;
         }
+        return selected || attemptedRead;
     }
 
-    private void finishPending() {
-        try {
-            if (pending.get() && !loaded.test(pendingChunk)) {
-                confirmed.put(pendingChunk, tick);
-                recent.remove(pendingChunk);
-            }
-        } catch (InterruptedException interrupted) {
-            Thread.currentThread().interrupt();
-        } catch (ExecutionException failed) {
-            // A failed verification cannot grant a native subscription.
-        }
-        pending = null;
-    }
-
-    /** Detached, immutable targets, valid until the next world tick. */
+    /** Detached resident candidates. The subscription checks the live provider again at admission. */
     public List<Long> ready(long train) {
         return forward.getOrDefault(train, Collections.emptyList());
     }
 
-    private void updateForward(Map<Long, ? extends Collection<Long>> routes) {
-        if (confirmed.isEmpty()) return;
-        // Unclaimed reads expire. An actual loaded watcher keeps its place until the route moves.
-        confirmed.entrySet().removeIf(entry -> tick - entry.getValue() >= RETRY_TICKS && !loaded.test(entry.getKey()));
-        forward.keySet().retainAll(routes.keySet());
-        Set<Long> retained = new HashSet<>();
-        for (Map.Entry<Long, ? extends Collection<Long>> train : routes.entrySet()) {
-            List<Long> previous = ready(train.getKey());
-            Collection<Long> route = train.getValue();
-            List<Long> next = new ArrayList<>(MAX_FORWARD_PER_TRAIN);
-            for (long chunk : previous) {
-                if (confirmed.containsKey(chunk) && route.contains(chunk)) next.add(chunk);
+    private void retainForward(Map<Long, ? extends Collection<Long>> routes) {
+        Iterator<Map.Entry<Long, List<Long>>> it = forward.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Long, List<Long>> entry = it.next();
+            Collection<Long> route = routes.get(entry.getKey());
+            if (route == null) {
+                it.remove();
+                continue;
             }
-            // A second train can share an already verified target without another read.
-            for (long chunk : route) {
-                if (next.size() == MAX_FORWARD_PER_TRAIN) break;
-                if (confirmed.containsKey(chunk) && !next.contains(chunk)) next.add(chunk);
-            }
-            retained.addAll(next);
-            if (next.isEmpty()) forward.remove(train.getKey());
-            else if (!next.equals(previous)) forward.put(train.getKey(), Collections.unmodifiableList(next));
+            List<Long> previous = entry.getValue();
+            if (previous.stream().allMatch(chunk -> route.contains(chunk) && resident.test(chunk))) continue;
+            List<Long> next = new ArrayList<>(previous);
+            next.removeIf(chunk -> !route.contains(chunk) || !resident.test(chunk));
+            if (next.isEmpty()) it.remove();
+            else entry.setValue(Collections.unmodifiableList(next));
         }
-        confirmed.keySet().retainAll(retained);
     }
 
     private static boolean wanted(Map<Long, ? extends Collection<Long>> routes, long chunk) {
@@ -172,9 +177,9 @@ public final class ChunkPrefetcher {
     }
 
     private void submit(long chunk) {
-        // Capture only the file reader and coordinates. A racing completion cannot retain or modify a world.
-        LongPredicate fileReader = verify;
-        FutureTask<Boolean> request = new FutureTask<>(() -> fileReader.test(chunk));
+        // The worker only warms the filesystem cache. Completion can never grant a subscription.
+        LongConsumer fileReader = warm;
+        FutureTask<Void> request = new FutureTask<>(() -> fileReader.accept(chunk), null);
         try {
             disk.execute(request);
         } catch (RejectedExecutionException busy) {
@@ -196,7 +201,6 @@ public final class ChunkPrefetcher {
 
     public void close() {
         closed = true;
-        confirmed.clear();
         forward.clear();
         if (pending != null) cancelPending();
         recent.clear();

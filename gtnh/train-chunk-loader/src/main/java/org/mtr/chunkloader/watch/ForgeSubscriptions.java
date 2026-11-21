@@ -5,10 +5,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.util.ChunkCoordComparator;
+import org.mtr.chunkloader.prefetch.ChunkPrefetcher;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -52,29 +50,20 @@ final class ForgeSubscriptions implements WatchWindow.Subscriptions {
         if (watcher != null) call(REMOVE, watcher, player);
     }
 
-    public boolean watchSaved(int x, int z) {
+    public boolean watchResident(int x, int z) {
         WorldServer world = manager.getWorldServer();
-        ChunkProviderServer provider = world.theChunkProviderServer;
-        if (!(provider.currentChunkLoader instanceof AnvilChunkLoader)) return false;
         Object watcher = call(WATCHER, manager, x, z, false);
-        boolean existing = member(watcher);
+        // Executed on the server thread. PlayerInstance's constructor and addPlayer can both
+        // call Forge loadChunk. With this exact map entry present, Forge runs their callbacks
+        // inline without scheduling disk IO, entering originalLoadChunk or populating neighbors.
+        if (!ChunkPrefetcher.isPopulatedResident(world.theChunkProviderServer, ChunkCoordIntPair.chunkXZ2Int(x, z))) return false;
+        if (member(watcher)) return true;
         long tick = world.getTotalWorldTime();
-        if (!existing && lastAheadAdmission == tick) return false;
-        // Native attachment can populate the target and three northwest neighbors.
-        if (unpopulated(provider, x, z) || unpopulated(provider, x - 1, z)
-                || unpopulated(provider, x, z - 1) || unpopulated(provider, x - 1, z - 1)) return false;
-        if (!((AnvilChunkLoader) provider.currentChunkLoader).chunkExists(world, x, z)) return false;
-        if (!existing) {
-            if (watcher == null) watcher = call(WATCHER, manager, x, z, true);
-            call(ADD, watcher, player);
-            lastAheadAdmission = tick;
-        }
+        if (lastAheadAdmission == tick || !ChunkPrefetcher.serverHasHeadroom(world.func_73046_m())) return false;
+        if (watcher == null) watcher = call(WATCHER, manager, x, z, true);
+        call(ADD, watcher, player);
+        lastAheadAdmission = tick;
         return true;
-    }
-
-    private static boolean unpopulated(ChunkProviderServer provider, int x, int z) {
-        Chunk loaded = (Chunk) provider.loadedChunkHashMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(x, z));
-        return loaded != null && !loaded.isTerrainPopulated;
     }
 
     public void ensure(int x, int z) {

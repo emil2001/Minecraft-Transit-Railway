@@ -6,6 +6,11 @@ import org.mtr.core.data.TransportMode;
 import org.mtr.core.data.Vehicle;
 import org.mtr.core.simulation.Simulator;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +21,25 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mtr.chunkloader.route.RoutePlansTest.*;
 
 public class RouteTransformerTest {
+    @Test void missingVehicleOrSimulatorHooksLeaveTheWholeClassUntouched() throws IOException {
+        assertMissingHook(Vehicle.class, "simulate");
+        assertMissingHook(Simulator.class, "<init>");
+        assertMissingHook(Simulator.class, "stop");
+    }
+
+    private void assertMissingHook(Class<?> original, String missing) throws IOException {
+        String name = original.getName();
+        ClassNode node = new ClassNode();
+        try (InputStream in = original.getResourceAsStream("/" + name.replace('.', '/') + ".class")) {
+            new ClassReader(in).accept(node, 0);
+        }
+        assertTrue(node.methods.removeIf(method -> ((MethodNode) method).name.equals(missing)));
+        ClassWriter writer = new ClassWriter(0);
+        node.accept(writer);
+        byte[] changed = writer.toByteArray();
+        assertTrue(changed == new RouteTransformer().transform(name, name, changed), name + "." + missing);
+    }
+
     @Test void realSimulatorPublishesAfterRiderPruningAndRetiresOnStop(@TempDir Path files) throws Throwable {
         // Exercise the emitted bytecode with ordinary JVM access checks and stack-map verification.
         ClassLoader isolated = new ClassLoader(getClass().getClassLoader()) {

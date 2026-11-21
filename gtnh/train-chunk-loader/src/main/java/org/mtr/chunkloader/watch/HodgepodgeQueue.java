@@ -60,6 +60,7 @@ final class HodgepodgeQueue {
         try {
             Object chunks = API.list.newInstance((Object) Arrays.copyOf(requested, count));
             ForgeSubscriptions.call(API.enqueue, scheduler, player, chunks);
+            count = 0;
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Cannot submit Hodgepodge chunk requests", e);
         }
@@ -80,7 +81,7 @@ final class HodgepodgeQueue {
         Api() throws ReflectiveOperationException {
             Class<?> scheduler = Class.forName("com.mitchej123.hodgepodge.mixins.hooks.ChunkGenScheduler");
             if (!PassengerView.Installed.class.isAssignableFrom(scheduler)) {
-                throw new NoSuchMethodException("Hodgepodge queueResend recipient hook");
+                throw new NoSuchMethodException("Hodgepodge generation and resend hooks");
             }
             Class<?> longList = Class.forName("it.unimi.dsi.fastutil.longs.LongList");
             list = Class.forName("it.unimi.dsi.fastutil.longs.LongArrayList").getConstructor(long[].class);

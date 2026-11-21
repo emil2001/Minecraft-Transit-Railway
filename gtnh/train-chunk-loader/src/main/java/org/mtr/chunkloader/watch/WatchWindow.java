@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.LongPredicate;
+import java.util.function.BooleanSupplier;
 
 /** A single player's square of native chunk subscriptions. Server thread only. */
 final class WatchWindow {
@@ -17,7 +19,7 @@ final class WatchWindow {
         void unwatch(int x, int z);
         void ensure(int x, int z);
         void submit();
-        boolean watchSaved(int x, int z);
+        boolean watchResident(int x, int z);
     }
 
     private Set<Long> extra = Collections.emptySet();
@@ -33,7 +35,32 @@ final class WatchWindow {
     int radius() { return radius; }
 
     boolean contains(int x, int z) {
-        return inSquare(x, z, centerX, centerZ, radius) || extra.contains(key(x, z));
+        return allowsGeneration(x, z) || extra.contains(key(x, z));
+    }
+
+    boolean allowsResend(int x, int z, BooleanSupplier receivedInitialChunk) {
+        return contains(x, z) && receivedInitialChunk.getAsBoolean();
+    }
+
+    boolean allowsGeneration(int x, int z) {
+        return inSquare(x, z, centerX, centerZ, radius);
+    }
+
+    void pruneGeneration(Set<Long> requests) {
+        requests.removeIf(packed -> !allowsGeneration(packed.intValue(), (int) (packed >> 32)));
+    }
+
+    // A scheduler fill (including its aged fallback) may generate any missing tile of a 3x3.
+    // At the square's edge it is safe when every exterior neighbor is already resident.
+    boolean allowsFill(int x, int z, LongPredicate resident) {
+        if (!allowsGeneration(x, z)) return false;
+        if (inSquare(x, z, centerX, centerZ, radius - 1)) return true;
+        for (int i = x - 1; i <= x + 1; i++) {
+            for (int j = z - 1; j <= z + 1; j++) {
+                if (!allowsGeneration(i, j) && !resident.test(key(i, j))) return false;
+            }
+        }
+        return true;
     }
 
     static List<Long> outsideSquare(List<Long> path, int x, int z, int radius) {
@@ -75,7 +102,7 @@ final class WatchWindow {
         Set<Long> kept = route.isEmpty() ? Collections.emptySet() : new HashSet<>(route.size());
         for (long p : route) {
             int i = (int) p, j = (int) (p >> 32);
-            if (!inSquare(i, j, x, z, next) && (extra.contains(p) || watches.watchSaved(i, j))) kept.add(p);
+            if (!inSquare(i, j, x, z, next) && (extra.contains(p) || watches.watchResident(i, j))) kept.add(p);
         }
         for (long p : extra) {
             int i = (int) p, j = (int) (p >> 32);

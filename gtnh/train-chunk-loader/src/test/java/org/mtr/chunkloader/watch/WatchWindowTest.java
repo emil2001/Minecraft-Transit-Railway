@@ -28,6 +28,46 @@ class WatchWindowTest {
         assertEquals(441, pedestrian.watched.size());
     }
 
+    @Test void onlyThisOwnersSquareCanRequestGenerationAndCrossingTheBoundaryReenablesIt() {
+        long shared = key(7, 0);
+        WatchWindow window = new WatchWindow(0, 0, 6);
+        MemoryWatches rider = new MemoryWatches(6);
+        rider.saved.add(shared);
+        window.resize(0, 0, 6, java.util.Collections.singleton(shared), rider);
+        Set<Long> passenger = new HashSet<>(java.util.Arrays.asList(shared, key(-6, 1)));
+        Set<Long> pedestrian = new HashSet<>(passenger);
+        window.pruneGeneration(passenger);
+        assertEquals(java.util.Collections.singleton(key(-6, 1)), passenger);
+        assertTrue(pedestrian.contains(shared));
+        assertTrue(window.contains(7, 0)); // Can receive this saved chunk without owning generation for it.
+        assertFalse(window.allowsFill(7, 0, k -> true));
+
+        window.resize(1, 0, 6, java.util.Collections.emptyList(), rider);
+        passenger.add(shared);
+        window.pruneGeneration(passenger);
+        assertEquals(java.util.Collections.singleton(shared), passenger);
+    }
+
+    @Test void populationResendsWaitForTheInitialPacketAndEndWhenTheOwnerDropsTheChunk() {
+        WatchWindow window = new WatchWindow(0, 0, 6);
+        MemoryWatches rider = new MemoryWatches(6);
+        assertFalse(window.allowsResend(-6, -6, () -> false));
+        assertTrue(window.allowsResend(-6, -6, () -> true));
+        window.resize(1, 0, 6, java.util.Collections.emptyList(), rider);
+        assertFalse(window.allowsResend(-6, -6, () -> { throw new AssertionError("departed chunk lookup"); }));
+        window.resize(0, 0, 6, java.util.Collections.emptyList(), rider);
+        assertFalse(window.allowsResend(-6, -6, () -> false));
+        assertTrue(window.allowsResend(-6, -6, () -> true));
+    }
+
+    @Test void neighborFillRequiresResidentExteriorNeighborsIncludingTheDiagonal() {
+        WatchWindow window = new WatchWindow(-10, 9, 6);
+        assertTrue(window.allowsFill(-5, 14, k -> false));
+        assertFalse(window.allowsFill(-4, 15, k -> k != key(-3, 16)));
+        assertTrue(window.allowsFill(-4, 15, k -> true));
+        assertFalse(window.allowsFill(-3, 16, k -> true));
+    }
+
     @Test void movementDropsDepartedPendingChunksAndRequestsTheNewFrontEdge() {
         MemoryWatches rider = new MemoryWatches(10);
         WatchWindow window = new WatchWindow(0, 0, 10);
@@ -98,7 +138,7 @@ class WatchWindowTest {
         public void unwatch(int x, int z) {
             if (watched.remove(key(x, z))) unloaded.add(key(x, z));
         }
-        public boolean watchSaved(int x, int z) {
+        public boolean watchResident(int x, int z) {
             if (!saved.contains(key(x, z))) return false;
             watched.add(key(x, z));
             return true;

@@ -1,5 +1,7 @@
 package org.mtr.chunkloader.route;
 
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.WorldServer;
 import org.mtr.core.data.Data;
 import org.mtr.core.data.PathData;
 import org.mtr.core.data.TransportMode;
@@ -40,13 +42,22 @@ public final class RoutePlans {
         public final Set<UUID> passengers;
         /** First visit to each sampled rail chunk, starting at the train's leading end. Low 32 bits X, high 32 bits Z. */
         public final List<Long> chunks;
-        private final long sampledAt;
+        private final long sampledAt, sidingId;
+        // Identity only. All reads of simulator-owned state stay on its own thread.
+        private final Simulator simulator;
 
-        private Plan(long id, Set<UUID> passengers, Set<Long> chunks, long sampledAt) {
+        private Plan(Simulator simulator, long sidingId, long id, Set<UUID> passengers, Set<Long> chunks, long sampledAt) {
+            this.simulator = simulator;
+            this.sidingId = sidingId;
             this.id = id;
             this.passengers = Collections.unmodifiableSet(new HashSet<>(passengers));
             this.chunks = Collections.unmodifiableList(new ArrayList<>(chunks));
             this.sampledAt = sampledAt;
+        }
+
+        public boolean authorizes(EntityPlayerMP player, WorldServer world) {
+            return passengers.contains(player.getUniqueID())
+                    && RiderAuthorization.matches(player, world, simulator, sidingId, id);
         }
     }
 
@@ -114,7 +125,9 @@ public final class RoutePlans {
         if (session == null || session.simulator != data || !session.loaded) return;
         long id = vehicle.getId();
         Plan previous = session.plans.isEmpty() ? null : session.plans.get(id);
-        double minSpeed = previous != null && !previous.chunks.isEmpty() ? EXIT_SPEED : ENTER_SPEED;
+        long sidingId = vehicle.vehicleExtraData.getSidingId();
+        boolean sameTrain = previous != null && previous.sidingId == sidingId;
+        double minSpeed = sameTrain && !previous.chunks.isEmpty() ? EXIT_SPEED : ENTER_SPEED;
         if (!(speed >= minSpeed) || !Double.isFinite(speed) || !Double.isFinite(progress)) {
             if (previous != null) session.plans.remove(id);
             return;
@@ -128,10 +141,10 @@ public final class RoutePlans {
         }
 
         long now = System.nanoTime();
-        if (previous != null && now - previous.sampledAt < SAMPLE_INTERVAL && previous.passengers.equals(riders.ids)) return;
+        if (sameTrain && now - previous.sampledAt < SAMPLE_INTERVAL && previous.passengers.equals(riders.ids)) return;
         Set<Long> chunks = chunksAhead(vehicle.vehicleExtraData.immutablePath, progress, speed, repeatIndex, repeatLimit, routeEnd);
         // An unusable route is retried at the normal sampling interval and never reduces the rider's view.
-        session.plans.put(id, new Plan(id, riders.ids, chunks, now));
+        session.plans.put(id, new Plan(session.simulator, sidingId, id, riders.ids, chunks, now));
     }
 
     private static Set<Long> chunksAhead(List<PathData> path, double progress, double speed,

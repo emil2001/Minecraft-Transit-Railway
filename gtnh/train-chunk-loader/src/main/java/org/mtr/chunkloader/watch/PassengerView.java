@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Server-thread entry points used by the tick handler and the two vanilla manager hooks. */
 public final class PassengerView {
@@ -94,24 +95,37 @@ public final class PassengerView {
         return ordinary.iterator();
     }
 
-    /** Hodgepodge resends populated chunks directly, outside PlayerInstance's normal packet path. */
-    public static Iterator<?> resendPlayers(List<?> players, int x, int z) {
-        if (ACTIVE.isEmpty()) return players.iterator();
-        List<Object> recipients = new ArrayList<>(players.size());
-        for (Object player : players) {
-            PassengerView view = ACTIVE.get(player);
-            if (view == null || view.window.contains(x, z)) recipients.add(player);
+    /** Called for each owner's LongSet before Hodgepodge computes its shared generation work. */
+    public static Object generationRequests(Map.Entry<?, ?> owner) {
+        Object requests = owner.getValue();
+        PassengerView view = ACTIVE.get(owner.getKey());
+        if (view != null) {
+            @SuppressWarnings("unchecked") Set<Long> chunks = (Set<Long>) requests;
+            view.window.pruneGeneration(chunks);
         }
-        return recipients.iterator();
+        return requests;
+    }
+
+    public static boolean allowFill(Object player, int x, int z) {
+        PassengerView view = ACTIVE.get(player);
+        return view == null || view.window.allowsFill(x, z,
+                view.manager.getWorldServer().theChunkProviderServer.loadedChunkHashMap::containsItem);
+    }
+
+    /** Used both for the actual send and the scheduler's decision to retry a populated chunk. */
+    public static boolean allowResend(Object player, int x, int z) {
+        PassengerView view = ACTIVE.get(player);
+        return view == null || view.window.allowsResend(x, z,
+                () -> view.manager.isPlayerWatchingChunk((EntityPlayerMP) player, x, z));
     }
 
     public static void forget(PlayerManager manager, EntityPlayerMP player) {
         PassengerView view = ACTIVE.get(player);
         if (view != null && view.manager == manager) {
             ACTIVE.remove(player);
-            view.window.removeExtra(view.watches);
+            view.release();
         }
-        // Forge removes native watchers; Hodgepodge's own remove hook withdraws queued work.
+        // Forge removes its native square watchers in the rest of removePlayer.
     }
 
     public static void clear(WorldServer world) {
@@ -120,14 +134,19 @@ public final class PassengerView {
             PassengerView view = entries.next();
             if (view.manager.getWorldServer() == world) {
                 entries.remove();
-                view.window.removeExtra(view.watches);
+                view.release();
             }
         }
     }
 
     public static void clear() {
-        for (PassengerView view : ACTIVE.values()) view.window.removeExtra(view.watches);
+        for (PassengerView view : ACTIVE.values()) view.release();
         ACTIVE.clear();
+    }
+
+    private void release() {
+        watches.resetPending();
+        window.removeExtra(watches);
     }
 
     private static int chunk(double position) { return MathHelper.floor_double(position) >> 4; }
