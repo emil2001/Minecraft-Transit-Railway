@@ -16,12 +16,55 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ForgeSubscriptionsTest {
     @TempDir Path save;
+
+    @Test void lowGlobalRadiusKeepsFastPassengerPolicyThroughEmptyAheadAndResize() throws Exception {
+        TestWorld world = allocate(TestWorld.class);
+        PlayerManager manager = allocate(PlayerManager.class);
+        set(WorldServer.class, world, "thePlayerManager", manager);
+        set(PlayerManager.class, manager, "theWorldServer", world);
+        set(PlayerManager.class, manager, "playerViewRadius", 4);
+        EntityPlayerMP rider = allocate(EntityPlayerMP.class), pedestrian = allocate(EntityPlayerMP.class);
+        rider.worldObj = pedestrian.worldObj = world;
+
+        // The test's Forge classes run without LaunchWrapper. Seed a stationary view that the
+        // runtime hooks installed at radius four, then exercise the normal tick and resize paths.
+        PassengerView view = allocate(PassengerView.class);
+        set(PassengerView.class, view, "manager", manager);
+        set(PassengerView.class, view, "window", new WatchWindow(0, 0, 4));
+        set(PassengerView.class, view, "watches", new ForgeSubscriptions(manager, rider));
+        Field registry = PassengerView.class.getDeclaredField("ACTIVE");
+        registry.setAccessible(true);
+        @SuppressWarnings("unchecked") Map<EntityPlayerMP, PassengerView> active =
+                (Map<EntityPlayerMP, PassengerView>) registry.get(null);
+        active.put(rider, view);
+        try {
+            PassengerView.update(rider, true, Collections.emptyList());
+            assertEquals(4, PassengerView.activeChunkRadius(12, rider));
+            assertEquals(2, PassengerView.activeChunkRadius(2, rider));
+            assertEquals(12, PassengerView.activeChunkRadius(12, pedestrian));
+            for (int global : new int[] {12, 4}) {
+                Iterator<EntityPlayerMP> ordinary = PassengerView.resizePlayers(Arrays.asList(rider, pedestrian), manager, global);
+                assertSame(pedestrian, ordinary.next());
+                assertFalse(ordinary.hasNext());
+                assertFalse(PassengerView.allowResend(rider, 5, 0), "The empty ahead set does not release a fast rider");
+            }
+            PassengerView.update(rider, false, Collections.emptyList());
+            assertEquals(12, PassengerView.activeChunkRadius(12, rider));
+            assertTrue(PassengerView.allowResend(rider, 5, 0));
+        } finally {
+            PassengerView.forget(manager, rider);
+        }
+    }
 
     @Test void rechecksLagAndResidencyBeforeCallingTheNativeWatcherConstructor() throws Exception {
         // Run the real PlayerManager/PlayerInstance and ChunkProviderServer fast path without starting a server.

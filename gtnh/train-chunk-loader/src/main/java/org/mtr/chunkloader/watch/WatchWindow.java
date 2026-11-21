@@ -1,6 +1,5 @@
 package org.mtr.chunkloader.watch;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,12 +62,8 @@ final class WatchWindow {
         return true;
     }
 
-    static List<Long> outsideSquare(List<Long> path, int x, int z, int radius) {
-        List<Long> outside = new ArrayList<>();
-        for (long chunk : path) {
-            if (!inSquare((int) chunk, (int) (chunk >> 32), x, z, radius)) outside.add(chunk);
-        }
-        return outside;
+    static void excludeSquare(List<Long> candidates, int x, int z, int radius) {
+        candidates.removeIf(chunk -> inSquare(chunk.intValue(), (int) (chunk >> 32), x, z, radius));
     }
 
     boolean hasExtra() { return !extra.isEmpty(); }

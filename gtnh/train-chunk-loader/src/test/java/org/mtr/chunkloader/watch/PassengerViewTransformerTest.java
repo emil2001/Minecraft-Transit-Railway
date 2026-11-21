@@ -25,6 +25,33 @@ class PassengerViewTransformerTest {
 
     private static final String SCHEDULER = "com/mitchej123/hodgepodge/mixins/hooks/ChunkGenScheduler";
     private static final String HOOKS = "org/mtr/chunkloader/watch/PassengerView";
+    private static final String WORLD = "net.minecraft.world.World";
+
+    @Test void worldCapsEachPlayersOwnSquareAndKeepsForcedChunkUnion() throws Exception {
+        ClassNode world = transformedClass(WORLD);
+        MethodNode build = method(world, "setActivePlayerChunksAndCheckLight");
+        assertTrue(world.interfaces.contains(HOOKS + "$Installed"));
+        assertEquals(1, calls(build, "java/util/Set", "addAll"));
+        assertEquals(1, calls(build, world.name, "func_152379_p"));
+        assertEquals(1, calls(build, HOOKS, "activeChunkRadius"));
+        assertEquals(1, calls(build, "java/util/Set", "add"));
+        new Analyzer(new BasicVerifier()).analyze(world.name, build);
+    }
+
+    @Test void unknownWorldPlayerLookupLeavesNativeBytesAndOmitsSupportMarker() throws Exception {
+        ClassNode world = read(bytes(WORLD));
+        MethodNode build = method(world, "setActivePlayerChunksAndCheckLight");
+        for (AbstractInsnNode insn : build.instructions.toArray()) {
+            if (insn instanceof MethodInsnNode && "get".equals(((MethodInsnNode) insn).name)) {
+                ((MethodInsnNode) insn).name = "differentPlayerLookup";
+                break;
+            }
+        }
+        ClassWriter writer = new ClassWriter(0);
+        world.accept(writer);
+        byte[] original = writer.toByteArray();
+        assertSame(original, new PassengerViewTransformer().transform(WORLD, WORLD, original));
+    }
 
     @Test void packMixinSubmitsProcessesAndWithdrawsExactOwners() throws Exception {
         ClassNode mixin = read(bytes("com.mitchej123.hodgepodge.mixins.early.minecraft.fastload.MixinPlayerManager_ThrottleChunkGen"));

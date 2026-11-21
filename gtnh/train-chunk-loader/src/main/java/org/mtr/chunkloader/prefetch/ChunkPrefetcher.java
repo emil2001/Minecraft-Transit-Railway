@@ -18,7 +18,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongConsumer;
-import java.util.function.LongPredicate;
+import java.util.function.LongFunction;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
@@ -43,7 +43,7 @@ public final class ChunkPrefetcher {
                 return thread;
             });
 
-    private final LongPredicate resident;
+    private final LongFunction<Chunk> loadedChunk;
     private final BooleanSupplier hasHeadroom;
     private final LongConsumer warm;
     private final ThreadPoolExecutor disk;
@@ -55,12 +55,12 @@ public final class ChunkPrefetcher {
     private boolean closed;
 
     public ChunkPrefetcher(WorldServer world) {
-        this(chunk -> isPopulatedResident(world.theChunkProviderServer, chunk),
+        this(key -> loadedChunk(world.theChunkProviderServer, key),
                 () -> serverHasHeadroom(world.func_73046_m()), reader(world.theChunkProviderServer.currentChunkLoader), DISK);
     }
 
-    ChunkPrefetcher(LongPredicate resident, BooleanSupplier hasHeadroom, LongConsumer warm, ThreadPoolExecutor disk) {
-        this.resident = resident;
+    ChunkPrefetcher(LongFunction<Chunk> loadedChunk, BooleanSupplier hasHeadroom, LongConsumer warm, ThreadPoolExecutor disk) {
+        this.loadedChunk = loadedChunk;
         this.hasHeadroom = hasHeadroom;
         this.warm = warm;
         this.disk = disk;
@@ -73,7 +73,14 @@ public final class ChunkPrefetcher {
     }
 
     public static boolean isPopulatedResident(ChunkProviderServer provider, long key) {
-        Chunk chunk = (Chunk) provider.loadedChunkHashMap.getValueByKey(key);
+        return isPopulated(loadedChunk(provider, key));
+    }
+
+    private static Chunk loadedChunk(ChunkProviderServer provider, long key) {
+        return (Chunk) provider.loadedChunkHashMap.getValueByKey(key);
+    }
+
+    private static boolean isPopulated(Chunk chunk) {
         return chunk != null && chunk.isTerrainPopulated;
     }
 
@@ -91,7 +98,7 @@ public final class ChunkPrefetcher {
     }
 
     public void tick(Map<Long, ? extends Collection<Long>> routes) {
-        if (closed || warm == null) return;
+        if (closed) return;
         tick++;
         if (routes.isEmpty()) {
             if (pending != null) cancelPending();
@@ -126,22 +133,24 @@ public final class ChunkPrefetcher {
         int checks = 0;
         for (long chunk : route) {
             if (++checks > MAX_CHUNKS_PER_TRAIN) break;
-            if (resident.test(chunk)) {
-                if (!selected && previous.size() < MAX_FORWARD_PER_TRAIN && !previous.contains(chunk)
+            if (previous.contains(chunk)) continue;
+            Chunk loaded = loadedChunk.apply(chunk);
+            if (loaded != null) {
+                if (loaded.isTerrainPopulated && !selected && previous.size() < MAX_FORWARD_PER_TRAIN
                         && (admitted.size() < MAX_FORWARD_PER_WORLD || admitted.contains(chunk))) {
                     List<Long> next = new ArrayList<>(previous);
                     next.add(chunk);
                     forward.put(train, Collections.unmodifiableList(next));
                     selected = true;
                 }
-            } else if (pending == null && !attemptedRead) {
+            } else if (warm != null && pending == null && !attemptedRead) {
                 Long last = recent.get(chunk);
                 if (last == null || tick - last >= RETRY_TICKS) {
                     submit(chunk);
                     attemptedRead = true;
                 }
             }
-            if (selected && (attemptedRead || pending != null)) break;
+            if (selected && (warm == null || attemptedRead || pending != null)) break;
         }
         return selected || attemptedRead;
     }
@@ -161,9 +170,13 @@ public final class ChunkPrefetcher {
                 continue;
             }
             List<Long> previous = entry.getValue();
-            if (previous.stream().allMatch(chunk -> route.contains(chunk) && resident.test(chunk))) continue;
-            List<Long> next = new ArrayList<>(previous);
-            next.removeIf(chunk -> !route.contains(chunk) || !resident.test(chunk));
+            List<Long> next = previous;
+            for (Long chunk : previous) {
+                if (route.contains(chunk) && isPopulated(loadedChunk.apply(chunk))) continue;
+                if (next == previous) next = new ArrayList<>(previous);
+                next.remove(chunk);
+            }
+            if (next == previous) continue;
             if (next.isEmpty()) it.remove();
             else entry.setValue(Collections.unmodifiableList(next));
         }
