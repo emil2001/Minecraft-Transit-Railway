@@ -24,10 +24,15 @@ public final class RouteTransformer implements IClassTransformer {
         ClassReader reader = new ClassReader(bytes);
         // All insertions are stack-neutral at existing instruction boundaries. Keep Core's frames.
         ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
-        reader.accept(new ClassVisitor(Opcodes.ASM5, writer) {
+        class RouteHooks extends ClassVisitor {
+            boolean sawSimulation, sawOpen, sawClose;
+
+            RouteHooks() { super(Opcodes.ASM5, writer); }
+
             @Override public MethodVisitor visitMethod(int access, String method, String descriptor,
                                                        String signature, String[] exceptions) {
                 MethodVisitor next = super.visitMethod(access, method, descriptor, signature, exceptions);
+                if ((access & Opcodes.ACC_STATIC) != 0) return next;
                 boolean simulation = vehicle && "simulate".equals(method) && SIMULATE.equals(descriptor);
                 boolean opened = !vehicle && "<init>".equals(method)
                         && "(Ljava/lang/String;[Ljava/lang/String;Ljava/nio/file/Path;Z)V".equals(descriptor);
@@ -36,19 +41,37 @@ public final class RouteTransformer implements IClassTransformer {
                 return new MethodVisitor(Opcodes.ASM5, next) {
                     @Override public void visitCode() {
                         super.visitCode();
-                        if (closed) lifecycle(next, "simulatorClosed");
+                        if (closed) {
+                            lifecycle(next, "simulatorClosed");
+                            sawClose = true;
+                        }
                     }
 
                     @Override public void visitInsn(int opcode) {
                         if (opcode == Opcodes.RETURN) {
-                            if (simulation) observe(next);
-                            if (opened) lifecycle(next, "simulatorOpened");
+                            if (simulation) {
+                                observe(next);
+                                sawSimulation = true;
+                            }
+                            if (opened) {
+                                lifecycle(next, "simulatorOpened");
+                                sawOpen = true;
+                            }
                         }
                         super.visitInsn(opcode);
                     }
                 };
             }
-        }, 0);
+        }
+        RouteHooks hooks = new RouteHooks();
+        reader.accept(hooks, 0);
+        if (vehicle ? !hooks.sawSimulation : !(hooks.sawOpen && hooks.sawClose)) {
+            String missing = vehicle ? "Vehicle.simulate" :
+                    (!hooks.sawOpen ? "Simulator constructor" : "Simulator.stop");
+            org.apache.logging.log4j.LogManager.getLogger("MTR Train Chunk Loader").warn(
+                    "Train route loading disabled: missing required {} hook in {}", missing, transformedName);
+            return bytes;
+        }
         return writer.toByteArray();
     }
 

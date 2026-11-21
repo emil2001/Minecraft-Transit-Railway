@@ -15,6 +15,10 @@ public final class PassengerViewTransformer implements IClassTransformer {
     private static final String NATIVE_MOVE = "(" + PLAYER + ")V";
     private static final String HOOK_MOVE = "(L" + MANAGER + ";" + PLAYER + ")V";
 
+    private static final String WORLD = "Lnet/minecraft/world/WorldServer;";
+    private static final String PROVIDER = "Lnet/minecraft/world/gen/ChunkProviderServer;";
+    private static final String RANGE = "(" + WORLD + "III)Z";
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         boolean manager = "net.minecraft.server.management.PlayerManager".equals(transformedName);
@@ -23,14 +27,12 @@ public final class PassengerViewTransformer implements IClassTransformer {
         if (bytes == null || !(manager || dispatch || scheduler)) return bytes;
         ClassNode node = new ClassNode();
         new ClassReader(bytes).accept(node, 0);
-        int hooked = 0;
+        if (node.interfaces.contains(HOOKS + "$Installed")) return bytes;
+        int hooked = scheduler && patchScheduler(node) ? 1 : 0;
         for (Object entry : node.methods) {
             MethodNode method = (MethodNode) entry;
-            if (scheduler) {
-                if (!"queueResend".equals(method.name) || !method.desc.equals(
-                        "(Lnet/minecraft/world/WorldServer;Lnet/minecraft/world/gen/ChunkProviderServer;III)Z")) continue;
-                hooked += replaceIterator(method, ILOAD, 2, ILOAD, 3, "resendPlayers", "II");
-            } else if (dispatch) {
+            if (scheduler) break;
+            if (dispatch) {
                 for (AbstractInsnNode insn : method.instructions.toArray()) {
                     if (!(insn instanceof MethodInsnNode)) continue;
                     MethodInsnNode call = (MethodInsnNode) insn;
@@ -61,6 +63,111 @@ public final class PassengerViewTransformer implements IClassTransformer {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         node.accept(writer);
         return writer.toByteArray();
+    }
+
+    /** All of these sites belong to the same 2.7.221 scheduler. Refuse partial installation. */
+    @SuppressWarnings("unchecked")
+    private static boolean patchScheduler(ClassNode node) {
+        MethodNode range = method(node, "isWithinChunkRange", RANGE);
+        MethodNode distance = method(node, "minPlayerDistSq", "(" + WORLD + "III)D");
+        MethodNode resend = method(node, "queueResend", "(" + WORLD + PROVIDER + "III)Z");
+        MethodNode fills = method(node, "processFills", "(J" + WORLD + PROVIDER + "I)I");
+        MethodNode population = method(node, "processPopulationQueue", "(J" + WORLD + PROVIDER + "I)I");
+        MethodNode aged = method(node, "forceProcessAged", "(" + WORLD + PROVIDER + "I)V");
+        String pruneArgs = "(" + WORLD + PROVIDER + "Lnet/minecraft/world/chunk/storage/AnvilChunkLoader;I"
+                + "L" + node.name + "$ChunkLoadCallback;)V";
+        MethodNode prune = method(node, "pruneAndSort", pruneArgs);
+        if (range == null || distance == null || resend == null || fills == null || population == null
+                || aged == null || prune == null) return false;
+
+        // Native uses one range query for two different purposes. A fill may load missing
+        // neighbors. A POPULATED retry only needs a recipient for the already generated chunk.
+        MethodNode fillRange = new MethodNode(range.access, "mtr$withinFillRange", RANGE, null, null);
+        range.accept(fillRange);
+        MethodInsnNode fillQuery = uniqueCall(fills, node.name, range.name, RANGE);
+        if (fillQuery == null || uniqueCall(population, node.name, range.name, RANGE) == null
+                || uniqueCall(aged, node.name, distance.name, distance.desc) == null
+                || !guardRange(fillRange, "allowFill", 1, 2) || !guardRange(distance, "allowFill", 1, 2)
+                || !guardRange(range, "allowResend", 1, 2) || !guardRange(resend, "allowResend", 2, 3)
+                || !pruneGeneration(prune)) return false;
+        fillQuery.name = fillRange.name;
+        node.methods.add(fillRange);
+        return true;
+    }
+
+    private static MethodNode method(ClassNode node, String name, String desc) {
+        for (Object raw : node.methods) {
+            MethodNode method = (MethodNode) raw;
+            if (name.equals(method.name) && desc.equals(method.desc)) return method;
+        }
+        return null;
+    }
+
+    private static MethodInsnNode uniqueCall(MethodNode method, String owner, String name, String desc) {
+        MethodInsnNode found = null;
+        for (AbstractInsnNode insn : method.instructions.toArray()) {
+            if (!(insn instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) insn;
+            if (!owner.equals(call.owner) || !name.equals(call.name) || !desc.equals(call.desc)) continue;
+            if (found != null) return null;
+            found = call;
+        }
+        return found;
+    }
+
+    /** After the two native distance comparisons, skip the same player when its policy rejects the chunk. */
+    private static boolean guardRange(MethodNode method, String policy, int chunkX, int chunkZ) {
+        int player = -1;
+        JumpInsnNode first = null, second = null;
+        for (AbstractInsnNode insn : method.instructions.toArray()) {
+            if (insn.getOpcode() == CHECKCAST) {
+                String type = ((TypeInsnNode) insn).desc;
+                if (!type.equals("net/minecraft/entity/player/EntityPlayer")
+                        && !type.equals("net/minecraft/entity/player/EntityPlayerMP")) continue;
+                AbstractInsnNode store = nextInstruction(insn);
+                if (player >= 0 || store == null || store.getOpcode() != ASTORE) return false;
+                player = ((VarInsnNode) store).var;
+            } else if (insn.getOpcode() == IF_ICMPGT) {
+                if (player < 0 || second != null) return false;
+                if (first == null) first = (JumpInsnNode) insn;
+                else second = (JumpInsnNode) insn;
+            }
+        }
+        if (second == null || first.label != second.label) return false;
+        InsnList check = new InsnList();
+        check.add(new VarInsnNode(ALOAD, player));
+        check.add(new VarInsnNode(ILOAD, chunkX));
+        check.add(new VarInsnNode(ILOAD, chunkZ));
+        check.add(hook(policy, "(Ljava/lang/Object;II)Z"));
+        check.add(new JumpInsnNode(IFEQ, second.label));
+        method.instructions.insert(second, check);
+        return true;
+    }
+
+    /** Restrict each owner's set before native code rebuilds its union, reference counts and work list. */
+    private static boolean pruneGeneration(MethodNode prune) {
+        MethodInsnNode getRequests = null;
+        for (AbstractInsnNode insn : prune.instructions.toArray()) {
+            if (!(insn instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) insn;
+            if (!"java/util/Map$Entry".equals(call.owner) || !"getValue".equals(call.name)
+                    || !"()Ljava/lang/Object;".equals(call.desc)) continue;
+            AbstractInsnNode cast = nextInstruction(call);
+            if (!(cast instanceof TypeInsnNode) || cast.getOpcode() != CHECKCAST
+                    || !"it/unimi/dsi/fastutil/longs/LongSet".equals(((TypeInsnNode) cast).desc)) continue;
+            AbstractInsnNode store = nextInstruction(cast);
+            if (store == null || store.getOpcode() != ASTORE) continue;
+            if (getRequests != null) return false;
+            getRequests = call;
+        }
+        if (getRequests == null) return false;
+        prune.instructions.set(getRequests, hook("generationRequests", "(Ljava/util/Map$Entry;)Ljava/lang/Object;"));
+        return true;
+    }
+
+    private static AbstractInsnNode nextInstruction(AbstractInsnNode insn) {
+        do { insn = insn.getNext(); } while (insn != null && insn.getOpcode() < 0);
+        return insn;
     }
 
     private static int replaceIterator(MethodNode method, int opA, int varA, int opB, int varB,

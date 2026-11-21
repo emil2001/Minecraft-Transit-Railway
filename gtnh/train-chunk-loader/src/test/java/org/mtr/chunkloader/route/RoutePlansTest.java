@@ -53,6 +53,16 @@ class RoutePlansTest {
         assertSame(plan, RoutePlans.current(DIMENSION).get(0), "Repeated frames reuse the route geometry");
     }
 
+    @Test void sameVehicleIdOnAnotherSidingReplacesThePlanImmediately() {
+        Simulator simulator = start();
+        observe(train(simulator, TransportMode.TRAIN, 0), simulator, 0.08);
+        RoutePlans.Plan first = RoutePlans.current(DIMENSION).get(0);
+        observe(train(simulator, TransportMode.TRAIN, 0, false, 82), simulator, 0.08);
+        RoutePlans.Plan second = RoutePlans.current(DIMENSION).get(0);
+        assertNotSame(first, second);
+        assertEquals(first.id, second.id);
+    }
+
     @Test void dropsTheLastRiderAndSlowTrainsImmediatelyAndIgnoresOtherModes() {
         Simulator simulator = start();
         Vehicle train = train(simulator, TransportMode.TRAIN, 0);
@@ -174,6 +184,10 @@ class RoutePlansTest {
     }
 
     static Vehicle train(Data data, TransportMode mode, int riderCar, boolean looping) {
+        return train(data, mode, riderCar, looping, 81);
+    }
+
+    static Vehicle train(Data data, TransportMode mode, int riderCar, boolean looping, long siding) {
         Position start = new Position(-160, 64, 0);
         Position end = new Position(0, 64, 160);
         Rail rail = Rail.newRail(start, Angle.S, end, Angle.W, Rail.Shape.QUADRATIC, 0,
@@ -190,6 +204,7 @@ class RoutePlansTest {
         riders.add(Utilities.getJsonObjectFromData(new VehicleRidingEntity(
                 RIDER, riderCar, 0, 0, 0, false, false, false, false, false, false, false)));
         JsonObject extraJson = new JsonObject();
+        extraJson.addProperty("sidingId", siding);
         extraJson.add("path", path);
         extraJson.add("ridingEntities", riders);
         extraJson.addProperty("totalDistance", raw.getRailLength());

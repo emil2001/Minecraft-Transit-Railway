@@ -26,10 +26,7 @@ class ChunkPrefetcherTest {
     final List<Long> reads = new ArrayList<>();
     boolean healthy = true;
     final Set<Long> resident = new HashSet<>(Collections.singleton(9L));
-    final ChunkPrefetcher prefetch = new ChunkPrefetcher(resident::contains, () -> healthy, chunk -> {
-        reads.add(chunk);
-        return chunk != 8;
-    }, disk);
+    final ChunkPrefetcher prefetch = new ChunkPrefetcher(resident::contains, () -> healthy, reads::add, disk);
 
     @Test void alternatesTrainsAndSkipsLoadedOrAlreadyWarmedSharedChunks() {
         routes.put(10L, Arrays.asList(9L, 1L, 2L));
@@ -55,43 +52,48 @@ class ChunkPrefetcherTest {
         assertEquals(Collections.singletonList(1L), reads);
     }
 
-    @Test void sharesConfirmedChunksAndRetainsLoadedOnesOnlyWhileWanted() {
-        routes.put(10L, Arrays.asList(9L, 8L, 1L, 2L, 3L, 4L, 5L, 6L, 7L));
+    @Test void admitsOnlyPopulatedResidentsAndSharesThemAcrossTrains() {
+        routes.put(10L, Arrays.asList(8L, 1L, 2L, 3L, 4L, 5L, 6L, 7L));
         routes.put(20L, Collections.singleton(1L));
         for (int tick = 0; tick < 100; tick++) {
             prefetch.tick(routes);
             Runnable job = disk.getQueue().poll();
             if (job != null) job.run();
         }
+        assertTrue(prefetch.ready(10).isEmpty(), "Even a completed file read cannot grant a subscription");
+        resident.addAll(Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L));
+        for (int tick = 0; tick < 50; tick++) prefetch.tick(routes);
         assertEquals(Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L), prefetch.ready(10));
         assertEquals(Collections.singletonList(1L), prefetch.ready(20));
-        assertFalse(reads.contains(7L), "A full train has no available slots");
-        resident.add(1L);
+        healthy = false;
         routes.remove(10L);
         prefetch.tick(routes);
         assertTrue(prefetch.ready(10).isEmpty());
-        assertEquals(Collections.singletonList(1L), prefetch.ready(20));
-        routes.clear();
+        assertEquals(Collections.singletonList(1L), prefetch.ready(20), "Existing demand survives a slow tick");
+        resident.remove(1L);
         prefetch.tick(routes);
-        assertTrue(prefetch.ready(20).isEmpty());
+        assertTrue(prefetch.ready(20).isEmpty(), "Residency is rechecked even while shedding load");
     }
 
-    @Test void boundedWorldAdmissionAndExpiryEvenIfTheNativeWatcherNeverLoads() {
-        for (long train = 100; train < 150; train++) routes.put(train, Collections.singleton(train));
+    @Test void boundsWorldAdmissionsAndCleansUpRoutesDuringLag() {
+        for (long train = 100; train < 150; train++) {
+            routes.put(train, Collections.singleton(train));
+            resident.add(train);
+        }
         int previous = 0;
         for (int i = 0; i < 150; i++) {
             prefetch.tick(routes);
-            Runnable job = disk.getQueue().poll();
-            if (job != null) job.run();
             int count = 0;
             for (long train : routes.keySet()) count += prefetch.ready(train).size();
             assertTrue(count <= previous + 1);
             previous = count;
         }
         assertEquals(32, previous);
+        assertTrue(disk.getQueue().isEmpty());
         healthy = false;
-        for (int i = 0; i < 250; i++) prefetch.tick(routes);
-        for (long train : routes.keySet()) assertTrue(prefetch.ready(train).isEmpty());
+        routes.clear();
+        prefetch.tick(routes);
+        for (long train = 100; train < 150; train++) assertTrue(prefetch.ready(train).isEmpty());
     }
 
     @Test void lateCompletionCannotAdmitARemovedRouteOrAnUnrelatedCoordinate() {
