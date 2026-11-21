@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.mtr'
-version = '0.1.1'
+version = '0.1.2'
 
 repositories {
     exclusiveContent {
@@ -31,7 +31,7 @@ minecraft {
 dependencies {
     // Built by the GTNH productionBuild task. Keep MTR out of the add-on JAR.
     def mtr = rfg.deobf(files(providers.gradleProperty('mtrJar').getOrElse(
-        '../../../mappings/forge/1.7.10-mapping/build/libs/MTR-GTNH-4.0.5-gtnh.22.jar')))
+        '../build/libs/MTR-GTNH-4.0.5-gtnh.22.jar')))
     compileOnly mtr
     testImplementation mtr
     testRuntimeOnly 'com.github.GTNewHorizons:Hodgepodge:2.7.221@jar'

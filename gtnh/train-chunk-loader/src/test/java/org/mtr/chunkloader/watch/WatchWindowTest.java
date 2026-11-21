@@ -1,15 +1,30 @@
 package org.mtr.chunkloader.watch;
 
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WatchWindowTest {
     @Test void freesLookaheadSlotsAsThePassengerPassesEachChunk() {
-        java.util.List<Long> path = java.util.Arrays.asList(0L, 6L, 7L, 8L, 9L);
-        assertEquals(java.util.Arrays.asList(7L, 8L, 9L), WatchWindow.outsideSquare(path, 0, 0, 6));
-        assertEquals(java.util.Arrays.asList(8L, 9L), WatchWindow.outsideSquare(path, 1, 0, 6));
+        List<Long> path = new ArrayList<>(Arrays.asList(0L, 6L, 7L, 8L, 9L));
+        WatchWindow.excludeSquare(path, 0, 0, 6);
+        assertEquals(Arrays.asList(7L, 8L, 9L), path);
+        WatchWindow.excludeSquare(path, 1, 0, 6);
+        assertEquals(Arrays.asList(8L, 9L), path);
+    }
+
+    @Test void forwardSlotsStartBeyondEveryPassengersWindowInEitherBoardingOrder() {
+        for (int first : new int[] {0, 10}) {
+            List<Long> path = new ArrayList<>();
+            for (int x = 0; x <= 22; x++) path.add(key(x, 0));
+            WatchWindow.excludeSquare(path, first, 0, 6);
+            WatchWindow.excludeSquare(path, 10 - first, 0, 6);
+            assertEquals(Arrays.asList(17L, 18L, 19L, 20L, 21L, 22L), path);
+        }
     }
 
     @Test void trainShedsOuterWatchersAndWithdrawsOnlyItsOwnDeferredRequests() {

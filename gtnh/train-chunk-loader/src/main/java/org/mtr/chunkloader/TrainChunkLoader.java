@@ -16,6 +16,7 @@ import org.mtr.chunkloader.watch.PassengerView;
 import org.mtr.mapping.holder.World;
 import org.mtr.mod.Init;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Mod(modid = "mtrtrainchunkloader", name = "MTR Train Chunk Loader", version = "0.1.1",
+@Mod(modid = "mtrtrainchunkloader", name = "MTR Train Chunk Loader", version = "0.1.2",
         acceptedMinecraftVersions = "[1.7.10]", dependencies = "required-after:mtr", acceptableRemoteVersions = "*")
 public final class TrainChunkLoader {
     private final Map<WorldServer, WorldRoutes> worlds = new IdentityHashMap<>();
@@ -101,12 +102,12 @@ public final class TrainChunkLoader {
                         EntityPlayerMP player = online.get(uuid);
                         if (player == null || !plan.authorizes(player, world)) continue;
                         rides.put(player, plan);
+                        List<Long> candidates = occupied.computeIfAbsent(plan.id, id -> new ArrayList<>(plan.chunks));
+                        PassengerView.excludePlayerWindow(player, candidates);
                         leadWatchers.merge(plan.id, player, (a, b) -> a.getUniqueID().compareTo(b.getUniqueID()) <= 0 ? a : b);
                     }
                 }
             }
-            leadWatchers.forEach((id, player) ->
-                    occupied.put(id, PassengerView.aheadOfView(player, rides.get(player).chunks)));
             prefetch.tick(occupied);
             for (Object entry : world.playerEntities) {
                 if (!(entry instanceof EntityPlayerMP)) continue;

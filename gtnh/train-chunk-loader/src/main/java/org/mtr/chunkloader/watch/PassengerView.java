@@ -1,20 +1,22 @@
 package org.mtr.chunkloader.watch;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
+import net.minecraft.server.management.ServerConfigurationManager;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import net.minecraft.server.management.ServerConfigurationManager;
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Server-thread entry points used by the tick handler and the two vanilla manager hooks. */
+/** Passenger policy shared by the server tick, watcher, scheduler and active-chunk hooks. */
 public final class PassengerView {
     /** Applied only to classes for which the transformer found all expected call sites. */
     public interface Installed {}
@@ -24,6 +26,7 @@ public final class PassengerView {
     private final PlayerManager manager;
     private final WatchWindow window;
     private final ForgeSubscriptions watches;
+    private boolean fastTrain;
     private Collection<Long> route = Collections.emptyList();
 
     private PassengerView(PlayerManager manager, EntityPlayerMP player, int global) {
@@ -35,14 +38,18 @@ public final class PassengerView {
     }
 
     private static boolean supported() {
-        return Installed.class.isAssignableFrom(PlayerManager.class)
+        return Installed.class.isAssignableFrom(World.class) && Installed.class.isAssignableFrom(PlayerManager.class)
                 && Installed.class.isAssignableFrom(ServerConfigurationManager.class) && HodgepodgeQueue.SUPPORTED;
     }
 
-    public static List<Long> aheadOfView(EntityPlayerMP player, List<Long> route) {
-        if (!supported()) return Collections.emptyList();
+    public static void excludePlayerWindow(EntityPlayerMP player, List<Long> candidates) {
+        if (candidates.isEmpty()) return;
+        if (!supported()) {
+            candidates.clear();
+            return;
+        }
         int radius = Math.min(WatchWindow.TRAIN_RADIUS, ForgeSubscriptions.radius(player.getServerForPlayer().getPlayerManager()));
-        return WatchWindow.outsideSquare(route, chunk(player.posX), chunk(player.posZ), radius);
+        WatchWindow.excludeSquare(candidates, chunk(player.posX), chunk(player.posZ), radius);
     }
 
     public static void update(EntityPlayerMP player, boolean fastTrain, Collection<Long> ahead) {
@@ -55,14 +62,15 @@ public final class PassengerView {
         }
         int global = ForgeSubscriptions.radius(manager);
         if (view == null) {
-            if (!fastTrain || (global <= WatchWindow.TRAIN_RADIUS && ahead.isEmpty())) return;
+            if (!fastTrain) return;
             view = new PassengerView(manager, player, global);
             ACTIVE.put(player, view);
         }
+        view.fastTrain = fastTrain;
         view.route = fastTrain ? ahead : Collections.emptyList();
         view.window.tick(chunk(player.posX), chunk(player.posZ), global, fastTrain, view.route, view.watches);
         syncCenter(player);
-        if (view.window.radius() == global && view.route.isEmpty() && !view.window.hasExtra()) ACTIVE.remove(player);
+        view.finishRestoration(player, global);
     }
 
     /** The ordinary packet-driven movement path, including other mods' overwrites. */
@@ -85,14 +93,26 @@ public final class PassengerView {
             if (view == null || view.manager != manager) {
                 ordinary.add(player);
             } else {
-                view.route = Collections.emptyList();
                 view.window.resize(chunk(player.posX), chunk(player.posZ), Math.min(global, view.window.radius()),
                         view.route, view.watches);
                 syncCenter(player);
-                if (view.window.radius() == global) ACTIVE.remove(player);
+                view.finishRestoration(player, global);
             }
         }
         return ordinary.iterator();
+    }
+
+    private void finishRestoration(EntityPlayerMP player, int global) {
+        // Even at the global radius, a fast passenger still owns the scheduler's fill/resend policy.
+        if (!fastTrain && window.radius() == global && !window.hasExtra()) ACTIVE.remove(player);
+    }
+
+    /** The world's own radius may already be capped by a simulation-distance mod. */
+    public static int activeChunkRadius(int nativeRadius, EntityPlayer player) {
+        if (!(player instanceof EntityPlayerMP)) return nativeRadius;
+        PassengerView view = ACTIVE.get(player);
+        return view == null || view.manager.getWorldServer() != player.worldObj ? nativeRadius
+                : Math.min(nativeRadius, view.window.radius());
     }
 
     /** Called for each owner's LongSet before Hodgepodge computes its shared generation work. */

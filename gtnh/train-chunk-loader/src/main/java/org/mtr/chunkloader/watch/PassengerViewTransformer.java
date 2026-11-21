@@ -10,6 +10,8 @@ import static org.objectweb.asm.Opcodes.*;
 /** Post-deobfuscation hooks outside Hodgepodge's overwritten movement method. */
 public final class PassengerViewTransformer implements IClassTransformer {
     private static final String MANAGER = "net/minecraft/server/management/PlayerManager";
+    private static final String BASE_WORLD = "net/minecraft/world/World";
+    private static final String ENTITY_PLAYER = "net/minecraft/entity/player/EntityPlayer";
     private static final String PLAYER = "Lnet/minecraft/entity/player/EntityPlayerMP;";
     private static final String HOOKS = "org/mtr/chunkloader/watch/PassengerView";
     private static final String NATIVE_MOVE = "(" + PLAYER + ")V";
@@ -24,7 +26,8 @@ public final class PassengerViewTransformer implements IClassTransformer {
         boolean manager = "net.minecraft.server.management.PlayerManager".equals(transformedName);
         boolean dispatch = "net.minecraft.server.management.ServerConfigurationManager".equals(transformedName);
         boolean scheduler = "com.mitchej123.hodgepodge.mixins.hooks.ChunkGenScheduler".equals(transformedName);
-        if (bytes == null || !(manager || dispatch || scheduler)) return bytes;
+        boolean world = "net.minecraft.world.World".equals(transformedName);
+        if (bytes == null || !(manager || dispatch || scheduler || world)) return bytes;
         ClassNode node = new ClassNode();
         new ClassReader(bytes).accept(node, 0);
         if (node.interfaces.contains(HOOKS + "$Installed")) return bytes;
@@ -32,7 +35,10 @@ public final class PassengerViewTransformer implements IClassTransformer {
         for (Object entry : node.methods) {
             MethodNode method = (MethodNode) entry;
             if (scheduler) break;
-            if (dispatch) {
+            if (world) {
+                if (named(method.name, "setActivePlayerChunksAndCheckLight", "func_72903_x")
+                        && "()V".equals(method.desc) && patchActiveChunkRadius(method)) hooked++;
+            } else if (dispatch) {
                 for (AbstractInsnNode insn : method.instructions.toArray()) {
                     if (!(insn instanceof MethodInsnNode)) continue;
                     MethodInsnNode call = (MethodInsnNode) insn;
@@ -63,6 +69,37 @@ public final class PassengerViewTransformer implements IClassTransformer {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         node.accept(writer);
         return writer.toByteArray();
+    }
+
+    /** Change only this player's contribution to the union. Forge adds forced chunks before this loop. */
+    private static boolean patchActiveChunkRadius(MethodNode method) {
+        MethodInsnNode radius = uniqueCall(method, BASE_WORLD, "func_152379_p", "()I");
+        if (radius == null || radius.getOpcode() != INVOKEVIRTUAL) return false;
+        // Find the current player in the same basic block as the radius calculation. Local slots
+        // vary between the compiled MCP and production classes, and the light check reads another player later.
+        for (AbstractInsnNode insn = radius.getPrevious(); insn != null; insn = insn.getPrevious()) {
+            if (insn instanceof JumpInsnNode || insn instanceof FrameNode) return false;
+            if (insn.getOpcode() != ASTORE) continue;
+            AbstractInsnNode cast = previousInstruction(insn);
+            if (!(cast instanceof TypeInsnNode) || cast.getOpcode() != CHECKCAST
+                    || !ENTITY_PLAYER.equals(((TypeInsnNode) cast).desc)) return false;
+            AbstractInsnNode get = previousInstruction(cast);
+            if (!(get instanceof MethodInsnNode)) return false;
+            MethodInsnNode lookup = (MethodInsnNode) get;
+            if (!"java/util/List".equals(lookup.owner) || !"get".equals(lookup.name)
+                    || !"(I)Ljava/lang/Object;".equals(lookup.desc)) return false;
+            InsnList cap = new InsnList();
+            cap.add(new VarInsnNode(ALOAD, ((VarInsnNode) insn).var));
+            cap.add(hook("activeChunkRadius", "(IL" + ENTITY_PLAYER + ";)I"));
+            method.instructions.insert(radius, cap);
+            return true;
+        }
+        return false;
+    }
+
+    private static AbstractInsnNode previousInstruction(AbstractInsnNode insn) {
+        do { insn = insn.getPrevious(); } while (insn != null && insn.getOpcode() < 0);
+        return insn;
     }
 
     /** All of these sites belong to the same 2.7.221 scheduler. Refuse partial installation. */
