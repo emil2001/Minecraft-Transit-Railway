@@ -1,5 +1,6 @@
 package org.mtr.chunkloader.prefetch;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +31,7 @@ class ChunkPrefetcherTest {
     final List<Long> reads = new ArrayList<>();
     boolean healthy = true;
     final Map<Long, Chunk> resident = new HashMap<>();
-    final ChunkPrefetcher prefetch = new ChunkPrefetcher(resident::get, () -> healthy, reads::add, disk);
+    final ChunkPrefetcher prefetch = new ChunkPrefetcher(resident::get, () -> healthy, (chunk, cancelled) -> reads.add(chunk), disk);
 
     private void loadReady(long key) {
         Chunk chunk = new Chunk(null, (int) key, (int) (key >> 32));
@@ -207,6 +212,37 @@ class ChunkPrefetcherTest {
         prefetch.tick(routes);
         assertTrue(disk.getQueue().isEmpty());
         assertTrue(reads.isEmpty());
+    }
+
+    @Test void leavingTheRouteCancelsAnInFlightReadWithoutInterruptingItsThread() throws Exception {
+        CountDownLatch started = new CountDownLatch(1), release = new CountDownLatch(1);
+        AtomicReference<BooleanSupplier> cancellation = new AtomicReference<>();
+        AtomicBoolean interrupted = new AtomicBoolean();
+        ChunkPrefetcher reader = new ChunkPrefetcher(resident::get, () -> true, (chunk, cancelled) -> {
+            cancellation.set(cancelled);
+            started.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException unexpected) {
+                interrupted.set(true);
+                Thread.currentThread().interrupt();
+            }
+        }, disk);
+        routes.put(10L, Collections.singleton(7L));
+        reader.tick(routes);
+        Thread worker = new Thread(disk.getQueue().remove());
+        worker.start();
+        try {
+            assertTrue(started.await(5, TimeUnit.SECONDS));
+            routes.clear();
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> reader.tick(routes));
+            assertTrue(cancellation.get().getAsBoolean());
+        } finally {
+            release.countDown();
+            worker.join(5000);
+        }
+        assertFalse(worker.isAlive());
+        assertFalse(interrupted.get());
     }
 
     @Test void shedsLoadAndClosesBeforeAQueuedReadCanStart() {

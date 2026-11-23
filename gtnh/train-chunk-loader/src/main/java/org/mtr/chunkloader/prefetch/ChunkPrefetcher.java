@@ -12,12 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
-import java.util.function.LongConsumer;
 import java.util.function.LongFunction;
 
 import net.minecraft.server.MinecraftServer;
@@ -43,14 +41,19 @@ public final class ChunkPrefetcher {
                 return thread;
             });
 
+    @FunctionalInterface
+    interface FileReader {
+        void warm(long chunk, BooleanSupplier cancelled);
+    }
+
     private final LongFunction<Chunk> loadedChunk;
     private final BooleanSupplier hasHeadroom;
-    private final LongConsumer warm;
+    private final FileReader warm;
     private final ThreadPoolExecutor disk;
     private final Map<Long, Long> recent = new LinkedHashMap<>();
     private final Map<Long, List<Long>> forward = new HashMap<>();
-    private FutureTask<Void> pending;
-    private long pendingChunk, tick, nextAdmission;
+    private ReadRequest pending;
+    private long tick, nextAdmission;
     private int trainIndex;
     private boolean closed;
 
@@ -59,17 +62,17 @@ public final class ChunkPrefetcher {
                 () -> serverHasHeadroom(world.func_73046_m()), reader(world.theChunkProviderServer.currentChunkLoader), DISK);
     }
 
-    ChunkPrefetcher(LongFunction<Chunk> loadedChunk, BooleanSupplier hasHeadroom, LongConsumer warm, ThreadPoolExecutor disk) {
+    ChunkPrefetcher(LongFunction<Chunk> loadedChunk, BooleanSupplier hasHeadroom, FileReader warm, ThreadPoolExecutor disk) {
         this.loadedChunk = loadedChunk;
         this.hasHeadroom = hasHeadroom;
         this.warm = warm;
         this.disk = disk;
     }
 
-    private static LongConsumer reader(IChunkLoader loader) {
+    private static FileReader reader(IChunkLoader loader) {
         if (!(loader instanceof AnvilChunkLoader)) return null;
         Path directory = ((AnvilChunkLoader) loader).chunkSaveLocation.toPath().resolve("region");
-        return chunk -> AnvilReadAhead.warm(directory, (int) chunk, (int) (chunk >> 32));
+        return (chunk, cancelled) -> AnvilReadAhead.warm(directory, (int) chunk, (int) (chunk >> 32), cancelled);
     }
 
     public static boolean isSendReadyResident(ChunkProviderServer provider, long key) {
@@ -112,8 +115,8 @@ public final class ChunkPrefetcher {
 
         boolean healthy = hasHeadroom.getAsBoolean();
         if (pending != null) {
-            if (!healthy || !wanted(routes, pendingChunk) || loadedChunk.apply(pendingChunk) != null) cancelPending();
-            else if (pending.isDone()) pending = null;
+            if (!healthy || !wanted(routes, pending.chunk) || loadedChunk.apply(pending.chunk) != null) cancelPending();
+            else if (pending.done) pending = null;
         }
         retainForward(routes);
         if (!healthy || tick < nextAdmission) return;
@@ -193,25 +196,43 @@ public final class ChunkPrefetcher {
 
     private void submit(long chunk) {
         // The worker only warms the filesystem cache. Completion can never grant a subscription.
-        LongConsumer fileReader = warm;
-        FutureTask<Void> request = new FutureTask<>(() -> fileReader.accept(chunk), null);
+        ReadRequest request = new ReadRequest(chunk, warm);
         try {
             disk.execute(request);
         } catch (RejectedExecutionException busy) {
             return;
         }
         pending = request;
-        pendingChunk = chunk;
         recent.remove(chunk);
         recent.put(chunk, tick);
         if (recent.size() > MAX_RECENT) recent.remove(recent.keySet().iterator().next());
     }
 
     private void cancelPending() {
-        pending.cancel(true);
+        // Interrupting a FileChannel read can synchronously close it on the calling server thread.
+        pending.cancelled = true;
         disk.remove(pending);
-        recent.remove(pendingChunk);
+        recent.remove(pending.chunk);
         pending = null;
+    }
+
+    private static final class ReadRequest implements Runnable {
+        final long chunk;
+        final FileReader reader;
+        volatile boolean cancelled, done;
+
+        ReadRequest(long chunk, FileReader reader) {
+            this.chunk = chunk;
+            this.reader = reader;
+        }
+
+        @Override public void run() {
+            try {
+                if (!cancelled) reader.warm(chunk, () -> cancelled);
+            } finally {
+                done = true;
+            }
+        }
     }
 
     public void close() {
