@@ -44,6 +44,11 @@ class ForgeSubscriptionsTest {
             assertEquals(4, PassengerView.activeChunkRadius(12, rider));
             assertEquals(2, PassengerView.activeChunkRadius(2, rider));
             assertEquals(12, PassengerView.activeChunkRadius(12, pedestrian));
+            assertTrue(PassengerView.allowFill(rider, 4, 0));
+            assertTrue(PassengerView.allowFill(rider, 4, 4));
+            assertFalse(PassengerView.allowFill(rider, 5, 4));
+            assertFalse(PassengerView.allowFill(rider, 5, 5));
+            assertTrue(PassengerView.allowFill(pedestrian, 5, 5));
             for (int global : new int[] {12, 4}) {
                 Iterator<EntityPlayerMP> ordinary = PassengerView.resizePlayers(Arrays.asList(rider, pedestrian), manager, global);
                 assertSame(pedestrian, ordinary.next());
@@ -125,6 +130,9 @@ class ForgeSubscriptionsTest {
         provider.loadedChunkHashMap.add(key, chunk);
         assertFalse(watches.watchResident(x, z), "An unfinished resident is ineligible");
         chunk.isTerrainPopulated = true;
+        chunk.isLightPopulated = true;
+        assertFalse(watches.watchResident(x, z), "The initial packet must be sendable before creating a watcher");
+        chunk.field_150815_m = true;
         provider.loadedChunkHashMap.remove(key);
         assertFalse(watches.watchResident(x, z), "The chunk was evicted after candidate selection");
         provider.loadedChunkHashMap.add(key, chunk);

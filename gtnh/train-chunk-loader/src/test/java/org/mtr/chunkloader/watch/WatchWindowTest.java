@@ -55,7 +55,7 @@ class WatchWindowTest {
         assertEquals(java.util.Collections.singleton(key(-6, 1)), passenger);
         assertTrue(pedestrian.contains(shared));
         assertTrue(window.contains(7, 0)); // Can receive this saved chunk without owning generation for it.
-        assertFalse(window.allowsFill(7, 0, k -> true));
+        assertFalse(window.allowsGeneration(7, 0));
 
         window.resize(1, 0, 6, java.util.Collections.emptyList(), rider);
         passenger.add(shared);
@@ -73,14 +73,6 @@ class WatchWindowTest {
         window.resize(0, 0, 6, java.util.Collections.emptyList(), rider);
         assertFalse(window.allowsResend(-6, -6, () -> false));
         assertTrue(window.allowsResend(-6, -6, () -> true));
-    }
-
-    @Test void neighborFillRequiresResidentExteriorNeighborsIncludingTheDiagonal() {
-        WatchWindow window = new WatchWindow(-10, 9, 6);
-        assertTrue(window.allowsFill(-5, 14, k -> false));
-        assertFalse(window.allowsFill(-4, 15, k -> k != key(-3, 16)));
-        assertTrue(window.allowsFill(-4, 15, k -> true));
-        assertFalse(window.allowsFill(-3, 16, k -> true));
     }
 
     @Test void movementDropsDepartedPendingChunksAndRequestsTheNewFrontEdge() {

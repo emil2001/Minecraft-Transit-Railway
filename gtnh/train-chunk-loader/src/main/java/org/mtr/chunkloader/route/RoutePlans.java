@@ -2,6 +2,7 @@ package org.mtr.chunkloader.route;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldServer;
+import org.apache.logging.log4j.LogManager;
 import org.mtr.core.data.Data;
 import org.mtr.core.data.PathData;
 import org.mtr.core.data.TransportMode;
@@ -37,7 +38,19 @@ public final class RoutePlans {
     private static final ConcurrentMap<String, Session> SESSIONS = new ConcurrentHashMap<>();
     private static final ThreadLocal<Riders> RIDERS = ThreadLocal.withInitial(Riders::new);
 
+    private static volatile boolean hooksDisabled;
+
     private RoutePlans() {}
+
+    public static boolean hooksEnabled() { return !hooksDisabled; }
+
+    public static synchronized void disableHooks(LinkageError cause) {
+        if (hooksDisabled) return;
+        hooksDisabled = true;
+        SESSIONS.clear();
+        LogManager.getLogger("MTR Train Chunk Loader").warn(
+                "Train route loading disabled: incompatible MTR Core, keeping normal chunk loading", cause);
+    }
 
     public static final class Plan {
         public final long id;
@@ -93,10 +106,12 @@ public final class RoutePlans {
     }
 
     public static void worldLoaded(String dimension) {
+        if (hooksDisabled) return;
         SESSIONS.computeIfPresent(dimension, (key, old) -> old.loaded ? old : new Session(old.simulator, true));
     }
 
     public static void clear(String dimension) {
+        if (hooksDisabled) return;
         SESSIONS.compute(dimension, (key, old) -> new Session(old == null ? null : old.simulator, false));
     }
 
@@ -109,6 +124,7 @@ public final class RoutePlans {
     }
 
     static List<Plan> current(String dimension, long now) {
+        if (hooksDisabled) return Collections.emptyList();
         Session session = SESSIONS.get(dimension);
         if (session == null || session.plans.isEmpty()) return Collections.emptyList();
         List<Plan> result = new ArrayList<>();

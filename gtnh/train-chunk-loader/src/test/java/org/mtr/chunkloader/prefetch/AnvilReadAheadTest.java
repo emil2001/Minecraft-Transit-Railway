@@ -6,6 +6,10 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -53,6 +57,49 @@ class AnvilReadAheadTest {
             out.writeInt(9 * 1024 * 1024);
         }
         assertEquals(8 * 1024 * 1024, AnvilReadAhead.warm(temp, -2, 35));
+    }
+
+    @Test void sharesOneBurstAcrossRegionsAndChargesHeadersAndExtendedLocationTables() throws Exception {
+        byte[] payload = new byte[1024 * 1024];
+        Path region = store(payload, 2);
+        Path secondWorld = Files.createDirectory(temp.resolve("second-world"));
+        Files.copy(region, secondWorld.resolve(region.getFileName()));
+        AtomicLong nanos = new AtomicLong();
+        AnvilReadAhead.ReadBudget budget = new AnvilReadAhead.ReadBudget(nanos::get, wait -> {
+            assertTrue(wait > 0 && wait <= 7_812_500L, "One 32 KiB read takes at most 7.8125 ms at 4 MiB/s");
+            nanos.addAndGet(wait);
+        });
+        assertEquals(payload.length, AnvilReadAhead.warm(temp, -2, 35, budget));
+        assertEquals(0, AnvilReadAhead.warm(temp, -1, 35, budget));
+        assertEquals(payload.length, AnvilReadAhead.warm(secondWorld, -2, 35, budget));
+
+        long bytes = 2L * (4 + 5 + 4096 + payload.length) + 4;
+        long minNanos = (bytes - 32 * 1024) * 1_000_000_000L / (4 * 1024 * 1024);
+        assertTrue(nanos.get() >= minNanos && nanos.get() < minNanos + 10, "Elapsed ns: " + nanos.get());
+    }
+
+    @Test void interruptDuringBudgetWaitStopsTheReadAndPreservesTheFlag() throws Exception {
+        Path file = store(new byte[64 * 1024], 2);
+        CountDownLatch waiting = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AnvilReadAhead.ReadBudget budget = new AnvilReadAhead.ReadBudget(() -> 0L, wait -> {
+            waiting.countDown();
+            release.await(5, TimeUnit.SECONDS);
+        });
+        FutureTask<Boolean> task = new FutureTask<>(() -> {
+            int bytes = AnvilReadAhead.warm(file.getParent(), -2, 35, budget);
+            return bytes == 0 && Thread.currentThread().isInterrupted();
+        });
+        Thread reader = new Thread(task);
+        reader.start();
+        try {
+            assertTrue(waiting.await(5, TimeUnit.SECONDS));
+            reader.interrupt();
+            assertTrue(task.get(1, TimeUnit.SECONDS));
+        } finally {
+            release.countDown();
+            reader.interrupt();
+        }
     }
 
     @Test void skipsMissingTruncatedAndUnknownRecordsWithoutRepairingFiles() throws Exception {

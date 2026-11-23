@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Mod(modid = "mtrtrainchunkloader", name = "MTR Train Chunk Loader", version = "0.1.2",
+@Mod(modid = "mtrtrainchunkloader", name = "MTR Train Chunk Loader", version = "0.1.3",
         acceptedMinecraftVersions = "[1.7.10]", dependencies = "required-after:mtr", acceptableRemoteVersions = "*")
 public final class TrainChunkLoader {
     private final Map<WorldServer, WorldRoutes> worlds = new IdentityHashMap<>();

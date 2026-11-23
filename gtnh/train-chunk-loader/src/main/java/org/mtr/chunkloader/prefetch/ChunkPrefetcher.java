@@ -72,16 +72,18 @@ public final class ChunkPrefetcher {
         return chunk -> AnvilReadAhead.warm(directory, (int) chunk, (int) (chunk >> 32));
     }
 
-    public static boolean isPopulatedResident(ChunkProviderServer provider, long key) {
-        return isPopulated(loadedChunk(provider, key));
+    public static boolean isSendReadyResident(ChunkProviderServer provider, long key) {
+        return isSendReady(loadedChunk(provider, key));
     }
 
     private static Chunk loadedChunk(ChunkProviderServer provider, long key) {
         return (Chunk) provider.loadedChunkHashMap.getValueByKey(key);
     }
 
-    private static boolean isPopulated(Chunk chunk) {
-        return chunk != null && chunk.isTerrainPopulated;
+    private static boolean isSendReady(Chunk chunk) {
+        // EntityPlayerMP uses func_150802_k() for the initial packet. Hodgepodge can
+        // relax it to the first-tick flag, so forward watches still require populated terrain.
+        return chunk != null && chunk.isTerrainPopulated && chunk.func_150802_k();
     }
 
     public static boolean serverHasHeadroom(MinecraftServer server) {
@@ -136,8 +138,8 @@ public final class ChunkPrefetcher {
             if (previous.contains(chunk)) continue;
             Chunk loaded = loadedChunk.apply(chunk);
             if (loaded != null) {
-                if (loaded.isTerrainPopulated && !selected && previous.size() < MAX_FORWARD_PER_TRAIN
-                        && (admitted.size() < MAX_FORWARD_PER_WORLD || admitted.contains(chunk))) {
+                if (!selected && previous.size() < MAX_FORWARD_PER_TRAIN
+                        && (admitted.size() < MAX_FORWARD_PER_WORLD || admitted.contains(chunk)) && isSendReady(loaded)) {
                     List<Long> next = new ArrayList<>(previous);
                     next.add(chunk);
                     forward.put(train, Collections.unmodifiableList(next));
@@ -172,7 +174,7 @@ public final class ChunkPrefetcher {
             List<Long> previous = entry.getValue();
             List<Long> next = previous;
             for (Long chunk : previous) {
-                if (route.contains(chunk) && isPopulated(loadedChunk.apply(chunk))) continue;
+                if (route.contains(chunk) && isSendReady(loadedChunk.apply(chunk))) continue;
                 if (next == previous) next = new ArrayList<>(previous);
                 next.remove(chunk);
             }

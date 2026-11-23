@@ -132,8 +132,9 @@ public final class PassengerView {
 
     public static boolean allowFill(Object player, int x, int z) {
         PassengerView view = ACTIVE.get(player);
-        return view == null || view.window.allowsFill(x, z,
-                view.manager.getWorldServer().theChunkProviderServer.loadedChunkHashMap::containsItem);
+        // Hodgepodge needs the center's 3x3 terrain to finish population, even at the edge.
+        // Only the normal square can request this work; forward watches never authorize a fill.
+        return view == null || view.window.allowsGeneration(x, z);
     }
 
     /** Used both for the actual send and the scheduler's decision to retry a populated chunk. */

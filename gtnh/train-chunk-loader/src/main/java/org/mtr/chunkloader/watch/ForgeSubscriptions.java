@@ -56,7 +56,7 @@ final class ForgeSubscriptions implements WatchWindow.Subscriptions {
         // Executed on the server thread. PlayerInstance's constructor and addPlayer can both
         // call Forge loadChunk. With this exact map entry present, Forge runs their callbacks
         // inline without scheduling disk IO, entering originalLoadChunk or populating neighbors.
-        if (!ChunkPrefetcher.isPopulatedResident(world.theChunkProviderServer, ChunkCoordIntPair.chunkXZ2Int(x, z))) return false;
+        if (!ChunkPrefetcher.isSendReadyResident(world.theChunkProviderServer, ChunkCoordIntPair.chunkXZ2Int(x, z))) return false;
         if (member(watcher)) return true;
         long tick = world.getTotalWorldTime();
         if (lastAheadAdmission == tick || !ChunkPrefetcher.serverHasHeadroom(world.func_73046_m())) return false;
